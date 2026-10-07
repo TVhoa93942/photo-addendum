@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Photo Addendum">
+<meta name="theme-color" content="#1d3a5f">
+<meta name="color-scheme" content="light">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>Photo Addendum — Phillips Real Estate</title>
+<style>
+:root{
+  --navy:#1d3a5f; --navy2:#27517e; --navy3:#e9eff7; --bg:#f1f3f6; --card:#fff; --line:#dce2e9;
+  --ink:#17212b; --muted:#66727f; --green:#2b7a4b; --greenbg:#e5f3ea; --red:#a33a3a; --redbg:#f8e8e8;
+  --amber:#93651a; --amberbg:#fbf1dc; --r:14px;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+html,body{margin:0;padding:0;background:var(--bg)}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);font-size:16px;line-height:1.4;overscroll-behavior-y:none}
+body.noscroll{overflow:hidden}
+button{font-family:inherit;touch-action:manipulation;-webkit-user-select:none;user-select:none;cursor:pointer;color:inherit}
+button:disabled{opacity:.45;cursor:default}
+[hidden]{display:none!important}
+.view{min-height:100vh;padding-bottom:calc(104px + var(--sab))}
+
+/* ---------- header ---------- */
+header.app{background:var(--navy);color:#fff;padding:calc(var(--sat) + 10px) 14px 10px}
+#libView header.app{position:sticky;top:0;z-index:30;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px}
+.htxt{min-width:0}
+header.app h1{font-size:20px;margin:0;font-weight:750;letter-spacing:.2px}
+header.app .sub{font-size:11.5px;opacity:.8;margin-top:1px}
+.hbtn{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:10px;min-width:46px;height:38px;font-size:22px;font-weight:800;line-height:1}
+.hback{background:none;border:0;color:#fff;font-size:16px;font-weight:650;padding:8px 6px 8px 0;white-space:nowrap}
+.htitle{font-size:17px;font-weight:750;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.savepill{border:0;border-radius:20px;padding:8px 13px;min-height:36px;font-size:13px;font-weight:750;background:rgba(255,255,255,.16);color:#fff;white-space:nowrap}
+.savepill.saved{background:rgba(87,190,123,.28);color:#e3f8ea}
+.savepill.error{background:#d9534f;color:#fff}
+.itop{position:sticky;top:0;z-index:30;box-shadow:0 2px 10px rgba(0,0,0,.14)}
+
+/* ---------- stage bar ---------- */
+.stagebar{display:flex;gap:6px;padding:8px 10px 7px;background:#fff}
+.st{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:5px 2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:var(--muted);min-height:48px}
+.st-l{font-size:13.5px;font-weight:800}
+.st-p{font-size:11.5px;font-weight:650;opacity:.85}
+.st.on.movein{background:var(--greenbg);border-color:#a6d2b6;color:var(--green)}
+.st.on.moveout{background:var(--redbg);border-color:#e1baba;color:var(--red)}
+.st.on.afterrepairs{background:var(--amberbg);border-color:#e5cd98;color:var(--amber)}
+.progress{height:3px;background:#e9edf2}
+.progress-bar{height:3px;width:0;background:var(--green);transition:width .3s}
+.progress-bar.moveout{background:var(--red)} .progress-bar.afterrepairs{background:var(--amber)}
+
+/* ---------- layout ---------- */
+.wrap{max-width:720px;margin:0 auto;padding:12px 12px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin:12px 0;overflow:hidden}
+.card>.head{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;min-height:50px;width:100%;background:#fff;border:0;text-align:left}
+.card>.head h2{font-size:15.5px;margin:0;color:var(--navy);font-weight:750;flex:0 0 auto}
+.card>.head .sum{flex:1;min-width:0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.card .body{padding:2px 14px 14px}
+.card.collapsed .body{display:none}
+.chev{color:var(--muted);transition:transform .15s;flex:0 0 auto;font-size:18px}
+.card.collapsed .chev{transform:rotate(-90deg)}
+.fl{display:block;font-size:12.5px;color:var(--muted);font-weight:650;margin:10px 0 0}
+input[type=text],input[type=search],input[type=date],select,textarea{width:100%;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-family:inherit;margin-top:4px;-webkit-appearance:none;appearance:none;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--navy2);box-shadow:0 0 0 3px rgba(39,81,126,.14)}
+input[type=date]{min-height:46px;display:block}
+select{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2366727f' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;padding-right:34px}
+textarea{min-height:80px;resize:vertical;line-height:1.4}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:12.5px;color:var(--muted);margin:6px 2px 0}
+.center{text-align:center}
+.sec-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:18px 2px 4px}
+.sec-h h2{font-size:16px;margin:0;color:var(--navy);font-weight:800}
+.sec-h h2 span{color:var(--muted);font-weight:650;font-size:13px}
+.sec-btns{display:flex;gap:6px}
+.chipbtn{border:1.5px solid var(--navy2);background:#fff;color:var(--navy);border-radius:19px;padding:8px 12px;min-height:38px;font-size:13px;font-weight:750;white-space:nowrap}
+.chipbtn.solid{background:var(--navy);color:#fff;border-color:var(--navy)}
+.addbtn{width:100%;padding:15px;border:2px dashed #9fb2c8;background:#fff;color:var(--navy);border-radius:var(--r);font-size:15.5px;font-weight:800;margin-top:6px}
+.bigbtn{width:100%;padding:17px;border:0;background:var(--navy);color:#fff;border-radius:var(--r);font-size:17px;font-weight:800;box-shadow:0 3px 10px rgba(29,58,95,.25)}
+.primary{border:0;background:var(--navy);color:#fff;border-radius:12px;padding:14px 16px;font-size:16px;font-weight:800}
+.secondary{border:1.5px solid var(--line);background:#fff;color:var(--navy);border-radius:12px;padding:13px 16px;font-size:15px;font-weight:750}
+.wide{width:100%;display:block}
+.iconbtn{border:1px solid var(--line);background:#fff;border-radius:11px;min-width:46px;height:46px;font-size:18px;color:var(--navy);font-weight:800;flex:0 0 auto;margin-top:4px}
+.iconbtn.danger{color:var(--red)}
+.empty{text-align:center;color:var(--muted);font-size:14.5px;padding:22px 14px}
+.empty .btns{display:grid;gap:8px;margin-top:14px}
+
+/* ---------- library ---------- */
+.searchrow{margin:12px 0 0}
+.icard{display:flex;align-items:stretch;background:#fff;border:1px solid var(--line);border-radius:var(--r);margin:10px 0;overflow:hidden}
+.ic-main{flex:1;min-width:0;display:flex;gap:12px;align-items:flex-start;padding:12px;background:#fff;border:0;text-align:left}
+.ic-img{flex:0 0 62px;width:62px;height:62px;border-radius:10px;object-fit:cover;background:#e8edf3;display:flex;align-items:center;justify-content:center;font-size:26px}
+.ic-txt{flex:1;min-width:0}
+.ic-txt b{display:block;font-size:16px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ic-txt small{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.ic-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.chip{font-size:11.5px;font-weight:800;border-radius:10px;padding:2px 8px;background:#eef1f5;color:var(--muted)}
+.chip.mi{background:var(--greenbg);color:var(--green)} .chip.mo{background:var(--redbg);color:var(--red)}
+.chip.ar{background:var(--amberbg);color:var(--amber)} .chip.sg{background:var(--navy3);color:var(--navy)}
+.chip.off{background:#f0f2f5;color:#98a2ad}
+.ic-foot{font-size:11.5px;color:var(--muted);margin-top:6px}
+.bk.ok{color:var(--green);font-weight:700} .bk.warn{color:var(--amber);font-weight:700}
+.ic-more{flex:0 0 50px;border:0;border-left:1px solid var(--line);background:#fafbfc;font-size:22px;font-weight:800;color:var(--navy)}
+.empty-lib{text-align:center;padding:36px 18px;color:var(--muted)}
+.empty-lib .el-ic{font-size:44px}
+.empty-lib b{display:block;color:var(--ink);font-size:17px;margin:6px 0}
+.banner{background:#fff7e6;border:1px solid #efd9a7;color:#6b4e12;border-radius:12px;padding:11px 12px;font-size:13.5px;margin:0 0 12px;display:flex;gap:10px;align-items:center}
+.banner b{color:#5a3f06}
+.banner button{margin-left:auto;flex:0 0 auto;border:0;background:#93651a;color:#fff;border-radius:9px;padding:8px 10px;font-weight:800;font-size:13px}
+.banner.info{background:var(--navy3);border-color:#c9d6e6;color:#22405f}
+.libfoot{font-size:12px;color:var(--muted);text-align:center;margin:18px 0 0;line-height:1.6}
+
+/* ---------- rooms ---------- */
+.room{background:#fff;border:1px solid var(--line);border-radius:var(--r);margin:10px 0;overflow:hidden}
+.room.open{border-color:#b4c4d6;box-shadow:0 3px 12px rgba(29,58,95,.10)}
+.room-h{width:100%;display:flex;align-items:center;gap:10px;padding:9px 12px;background:#fff;border:0;text-align:left;min-height:64px}
+.rc{flex:0 0 26px;width:26px;height:26px;border-radius:50%;border:2px solid #c6cfd9;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;font-weight:900}
+.rc.done{background:var(--green);border-color:var(--green)}
+.rc.done.moveout{background:var(--red);border-color:var(--red)} .rc.done.afterrepairs{background:var(--amber);border-color:var(--amber)}
+.rmini{flex:0 0 46px;width:46px;height:46px;border-radius:9px;object-fit:cover;background:#e8edf3;display:flex;align-items:center;justify-content:center;font-size:18px;opacity:.95}
+.rname{flex:1;min-width:0;display:block}
+.rname b{display:block;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rname small{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rname small .t{font-weight:800}
+.t.damage{color:var(--red)} .t.cleaning{color:var(--amber)} .t.wear{color:var(--green)}
+.rcounts{display:flex;gap:3px;flex:0 0 auto}
+.cnt{font-size:11px;font-weight:850;border-radius:9px;padding:2px 6px;min-width:20px;text-align:center}
+.cnt.mi{background:var(--greenbg);color:var(--green)} .cnt.mo{background:var(--redbg);color:var(--red)} .cnt.ar{background:var(--amberbg);color:var(--amber)}
+.room .chev{transition:transform .15s}
+.room.open .chev{transform:rotate(90deg)}
+.room-b{padding:0 12px 12px}
+.room.open .room-b{border-top:1px solid var(--line)}
+.rb-top{display:flex;gap:8px;align-items:center;margin-top:10px}
+.rb-top select{flex:1}
+.sblock{border-radius:12px;padding:11px;margin-top:11px;border:1px solid var(--line)}
+.sblock.movein{background:#f9fcfa;border-color:#cfe5d7}
+.sblock.moveout{background:#fdf9f9;border-color:#ecd3d3}
+.sblock.afterrepairs{background:#fefbf4;border-color:#eedcb4}
+.sb-h{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;font-weight:850;text-transform:uppercase;letter-spacing:.5px}
+.sblock.movein .sb-h{color:var(--green)} .sblock.moveout .sb-h{color:var(--red)} .sblock.afterrepairs .sb-h{color:var(--amber)}
+.sb-c{color:var(--muted);font-weight:700;text-transform:none;letter-spacing:0}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:7px;margin:9px 0 11px}
+.thumbs.sm{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));margin:8px 0 6px}
+.thumb{position:relative;height:88px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#e8edf3;padding:0;display:block;width:100%}
+.thumbs.sm .thumb{height:70px}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .ts{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:9.5px;padding:2px 3px;text-align:center;font-weight:600}
+.thumb .mainb{position:absolute;top:4px;left:4px;background:var(--navy);color:#fff;font-size:9px;font-weight:850;border-radius:6px;padding:1px 5px;letter-spacing:.4px}
+.thumb .capb{position:absolute;top:4px;right:4px;background:rgba(255,255,255,.9);color:var(--navy);font-size:10px;font-weight:900;border-radius:6px;padding:0 4px}
+.thumb.pending{display:flex;align-items:center;justify-content:center;background:#eef2f6}
+.nophotos{grid-column:1/-1;font-size:13px;color:var(--muted);padding:6px 2px}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid #c6d1dd;border-top-color:var(--navy);animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.photobtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.pbtn{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:58px;border:1.5px solid var(--navy2);background:#fff;color:var(--navy);border-radius:12px;font-size:13.5px;font-weight:800;margin:0;cursor:pointer;overflow:hidden;padding:4px 2px;-webkit-user-select:none;user-select:none}
+.pbtn .ic{font-size:21px;line-height:1.1}
+.pbtn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.pbtn:active,.chipbtn:active,.seg button:active,.phrases button:active{transform:scale(.97)}
+.vh{position:absolute!important;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none;left:0;top:0}
+.fh{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--muted);font-weight:700;margin:12px 0 0}
+.seg{display:flex;gap:6px;margin-top:5px}
+.seg button{flex:1;min-height:42px;border:1.5px solid var(--line);background:#fff;border-radius:11px;font-size:14px;font-weight:750;color:var(--muted);padding:4px}
+.seg button.on.good,.seg button.on.wear{background:var(--greenbg);border-color:#a6d2b6;color:var(--green)}
+.seg button.on.fair,.seg button.on.cleaning{background:var(--amberbg);border-color:#e5cd98;color:var(--amber)}
+.seg button.on.poor,.seg button.on.damage{background:var(--redbg);border-color:#e1baba;color:var(--red)}
+.mic{border:1px solid var(--line);background:#fff;border-radius:17px;padding:6px 12px;min-height:34px;font-size:13px;font-weight:750;color:var(--navy)}
+.mic.rec{background:#fde6e6;border-color:#e8b0b0;color:var(--red)}
+.phrases{display:grid;grid-auto-flow:column;grid-template-rows:auto auto;grid-auto-columns:max-content;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain;margin:8px -11px 0;padding:0 11px 4px}
+.phrases::-webkit-scrollbar{display:none}
+.phrases button{border:1px solid var(--line);background:#f5f7f9;border-radius:16px;padding:7px 11px;font-size:13px;color:var(--navy);font-weight:650;white-space:nowrap}
+.charge{display:flex;align-items:center;gap:10px;margin-top:8px}
+.charge span{font-size:13px;color:var(--muted);font-weight:700;white-space:nowrap}
+.charge input{margin-top:0}
+details.cmp{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:0 10px;background:#fff}
+details.cmp summary{padding:10px 0;font-size:13px;font-weight:800;cursor:pointer;list-style:none}
+details.cmp summary::-webkit-details-marker{display:none}
+details.cmp summary:before{content:'›';display:inline-block;margin-right:7px;transition:transform .15s}
+details.cmp[open] summary:before{transform:rotate(90deg)}
+details.cmp.movein summary{color:var(--green)} details.cmp.moveout summary{color:var(--red)} details.cmp.afterrepairs summary{color:var(--amber)}
+.cmp-note{font-size:13px;color:var(--ink);padding:0 0 10px;white-space:pre-wrap}
+.nextbtn{width:100%;margin-top:12px;padding:14px;border:0;border-radius:12px;background:var(--navy3);color:var(--navy);font-size:15px;font-weight:800}
+
+/* ---------- worksheet / signatures ---------- */
+.ded-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #eef1f4;font-size:14px}
+.ded-row span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ded-row.tot{font-weight:850;color:var(--navy);border-bottom:0}
+.ded-row .t{font-size:12px}
+.sigitem{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #eef1f4}
+.sigitem img{width:96px;height:44px;object-fit:contain;background:#fafbfc;border:1px solid var(--line);border-radius:8px;flex:0 0 auto}
+.sigitem div{flex:1;min-width:0}
+.sigitem b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sigitem small{display:block;font-size:12px;color:var(--muted)}
+.sigbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+
+/* ---------- bottom action bar ---------- */
+.actionbar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:9px 10px calc(var(--sab) + 9px);display:flex;gap:8px;max-width:720px;margin:0 auto;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.actionbar button{flex:1;padding:14px 6px;border-radius:12px;border:0;font-size:15px;font-weight:850}
+.ab-pdf{background:var(--navy);color:#fff}
+.ab-save{background:#e7edf5;color:var(--navy)}
+.ab-more{background:#e7edf5;color:var(--navy);flex:0 0 56px!important;font-size:22px!important}
+body.typing .actionbar{display:none}
+
+/* ---------- overlays ---------- */
+.overlay{position:fixed;inset:0;z-index:100}
+.backdrop{position:absolute;inset:0;background:rgba(15,25,40,.48)}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:90vh;background:#fff;border-radius:18px 18px 0 0;display:flex;flex-direction:column;max-width:720px;margin:0 auto;box-shadow:0 -6px 30px rgba(0,0,0,.25);animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.sheet-h b{font-size:16.5px;color:var(--navy)}
+.sheet-x{border:0;background:#eef1f5;border-radius:50%;width:34px;height:34px;font-size:16px;font-weight:800;color:var(--muted)}
+.sheet-b{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 14px calc(var(--sab) + 16px)}
+.menu-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:#fff;padding:14px 8px;font-size:16px;border-radius:11px;color:var(--ink);font-weight:600}
+.menu-item .mi-ic{font-size:20px;width:28px;text-align:center;flex:0 0 auto}
+.menu-item small{display:block;font-size:12.5px;color:var(--muted);font-weight:500;margin-top:1px}
+.menu-item.danger{color:var(--red)}
+.menu-sep{height:1px;background:var(--line);margin:4px 8px}
+.opt-h{font-size:12.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:14px 2px 6px}
+.radio{display:flex;gap:11px;align-items:flex-start;padding:11px;border:1.5px solid var(--line);border-radius:12px;margin:7px 0;cursor:pointer}
+.radio input{margin:3px 0 0;width:20px;height:20px;flex:0 0 auto;accent-color:var(--navy)}
+.radio b{display:block;font-size:15px}
+.radio span{display:block;font-size:12.5px;color:var(--muted)}
+.radio.sel{border-color:var(--navy2);background:#f6f9fc}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 2px;font-size:15px;border-bottom:1px solid #eef1f4}
+.toggle-row input{width:24px;height:24px;accent-color:var(--navy);flex:0 0 auto}
+.result{margin-top:14px;border:1.5px solid #a6d2b6;background:var(--greenbg);border-radius:12px;padding:12px}
+.result.err{border-color:#e1baba;background:var(--redbg);color:var(--red)}
+.result>b{display:block;color:var(--green);font-size:15.5px}
+.result p{margin:4px 0 10px;font-size:13px;color:var(--ink)}
+.pbar{height:8px;background:#e6ebf1;border-radius:6px;overflow:hidden;margin-top:12px}
+.pbar div{height:100%;width:0;background:var(--navy);transition:width .2s}
+.pmsg{font-size:13px;color:var(--muted);margin-top:6px;text-align:center}
+.help p,.help li{font-size:14.5px;line-height:1.5}
+.help h3{font-size:15px;color:var(--navy);margin:16px 0 4px}
+.help ul{padding-left:20px;margin:6px 0}
+.diag{font:12px/1.5 ui-monospace,Menlo,monospace;background:#f5f7f9;border:1px solid var(--line);border-radius:10px;padding:10px;white-space:pre-wrap;word-break:break-word}
+
+/* viewer */
+.dark{background:#0b0f14;color:#fff;display:flex;flex-direction:column}
+.vtop{display:flex;align-items:center;gap:10px;padding:calc(var(--sat) + 8px) 12px 8px}
+.vbtn{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:11px;min-width:44px;height:42px;font-size:16px;font-weight:800;padding:0 12px}
+.vtitle{flex:1;min-width:0;font-size:14.5px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vidx{font-size:13px;opacity:.75;flex:0 0 auto}
+.vstage{flex:1;position:relative;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;align-items:center;justify-content:center;touch-action:pan-x pan-y}
+.vstage img{max-width:100%;max-height:100%;object-fit:contain;display:block;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.vstage.zoom{display:block}
+.vstage.zoom img{max-width:none;max-height:none;width:260%}
+.vbot{padding:8px 12px calc(var(--sab) + 10px);background:rgba(0,0,0,.35)}
+.vmeta{font-size:12.5px;opacity:.85;margin-bottom:7px;text-align:center}
+.vbot input.vcap{width:100%;font-size:16px;padding:10px 12px;margin:0;border-radius:10px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);color:#fff;-webkit-appearance:none;box-shadow:none}
+.vcap::placeholder{color:rgba(255,255,255,.55)}
+.vbtns{display:flex;gap:8px;margin-top:8px}
+.vbtns .vbtn{flex:1}
+.vbtns .vbtn.nav{flex:0 0 52px;font-size:22px}
+.vbtn.del{background:rgba(217,83,79,.85)}
+
+/* camera */
+.cam{background:#000;color:#fff}
+.cam video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+.camtop{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(var(--sat) + 8px) 12px 8px;background:linear-gradient(rgba(0,0,0,.55),transparent)}
+.camstage{font-size:12.5px;font-weight:850;letter-spacing:.6px;border-radius:12px;padding:5px 10px;background:rgba(43,122,75,.85)}
+.camstage.moveout{background:rgba(163,58,58,.85)} .camstage.afterrepairs{background:rgba(147,101,26,.9)}
+.camroom{position:absolute;left:0;right:0;top:calc(var(--sat) + 62px);display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px}
+.camroom .rn{background:rgba(0,0,0,.55);border-radius:14px;padding:8px 14px;font-size:16px;font-weight:800;text-align:center;min-width:0;max-width:62vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.camroom .rn small{display:block;font-size:11.5px;font-weight:600;opacity:.8}
+.cambot{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;padding:16px 26px calc(var(--sab) + 22px);background:linear-gradient(transparent,rgba(0,0,0,.6))}
+.shutter{width:78px;height:78px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.9);box-shadow:0 0 0 3px rgba(0,0,0,.25)}
+.shutter:active{transform:scale(.92);background:#fff}
+.camlast{width:58px;height:58px;border-radius:12px;border:2px solid #fff;background:#222 center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.camcount{min-width:58px;text-align:center;font-size:13px;font-weight:800;line-height:1.3}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+.flash.on{opacity:.85;transition:none}
+.camerr{position:absolute;left:16px;right:16px;top:40%;transform:translateY(-50%);background:rgba(20,26,34,.94);border-radius:16px;padding:18px;text-align:center;font-size:15px}
+.camerr .primary{margin-top:12px}
+
+/* signature pad */
+.sigov{background:#fff;display:flex;flex-direction:column}
+.sig-top{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--sat) + 10px) 14px 10px;border-bottom:1px solid var(--line)}
+.sig-top b{font-size:17px;color:var(--navy)}
+.sig-form{padding:10px 14px 0}
+.sig-ack{font-size:13px;color:var(--muted);padding:8px 14px 0;font-style:italic}
+.sig-wrap{position:relative;margin:10px 14px 0;border:1.5px dashed #a9b7c7;border-radius:14px;background:#fff;overflow:hidden}
+#sigCanvas{display:block;width:100%;touch-action:none;-webkit-user-select:none;user-select:none}
+.sig-line{position:absolute;left:18px;right:18px;bottom:30px;border-bottom:1.5px solid #c0cad6;pointer-events:none}
+.sig-x{position:absolute;left:18px;bottom:34px;font-size:22px;color:#a9b7c7;pointer-events:none}
+.sig-ph{position:absolute;left:0;right:0;top:42%;text-align:center;color:#b3bfcc;font-size:15px;pointer-events:none}
+.sig-btns{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px;padding:12px 14px calc(var(--sab) + 14px)}
+
+/* busy + toast + splash */
+.busy{position:fixed;inset:0;z-index:200;background:rgba(15,25,40,.55);display:flex;align-items:center;justify-content:center;padding:24px}
+.busy-card{background:#fff;border-radius:16px;padding:22px 20px;width:min(340px,92vw);text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.busy-card .spin{width:34px;height:34px;border-width:4px}
+.busy-msg{margin-top:12px;font-weight:750;color:var(--navy)}
+.toast{position:fixed;left:12px;right:12px;bottom:calc(var(--sab) + 84px);z-index:150;max-width:560px;margin:0 auto;background:#1c2733;color:#fff;border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;font-size:14.5px;box-shadow:0 8px 28px rgba(0,0,0,.3);transform:translateY(20px);opacity:0;transition:all .2s;pointer-events:none}
+.toast.show{transform:none;opacity:1}
+.toast span{flex:1}
+.toast button{border:0;background:#fff;color:#1c2733;border-radius:9px;padding:8px 12px;font-weight:850;font-size:14px;flex:0 0 auto;pointer-events:auto}
+body.typing .toast{bottom:calc(var(--sab) + 14px)}
+body.noscroll .toast{top:calc(var(--sat) + 64px);bottom:auto;transform:translateY(-20px)}
+body.noscroll .toast.show{transform:none}
+.rb-side details.cmp:first-child{margin-top:11px}
+
+/* ---------- iPad / wide screens ---------- */
+@media (min-width:760px){
+  .wrap{max-width:1040px;padding:16px 20px 0}
+  header.app{padding-left:max(18px,calc((100% - 1040px)/2 + 20px));padding-right:max(18px,calc((100% - 1040px)/2 + 20px))}
+  .stagebar{padding-left:max(10px,calc((100% - 1040px)/2 + 20px));padding-right:max(10px,calc((100% - 1040px)/2 + 20px))}
+  .st{min-height:52px} .st-l{font-size:15px} .st-p{font-size:12.5px}
+  #libList{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-items:start}
+  .empty-lib,#libList>.hint{grid-column:1/-1}
+  .bigbtn{max-width:560px;display:block;margin:0 auto}
+  .rb-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;align-items:start}
+  .rb-grid.noside{grid-template-columns:minmax(0,1fr)}
+  .thumbs{grid-template-columns:repeat(auto-fill,minmax(112px,1fr))} .thumb{height:112px}
+  .thumbs.sm{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))} .thumbs.sm .thumb{height:96px}
+  .room-h{min-height:70px} .rmini{flex-basis:54px;width:54px;height:54px}
+  .actionbar{max-width:760px;border:1px solid var(--line);border-bottom:0;border-radius:18px 18px 0 0}
+  .sheet{left:50%;right:auto;top:50%;bottom:auto;width:min(640px,92vw);max-height:86vh;border-radius:18px;transform:translate(-50%,-50%);animation:pop .18s ease-out}
+  .sheet-b{padding-bottom:18px}
+  .sig-form,.sig-ack,.sig-btns{width:100%;max-width:900px;margin-left:auto;margin-right:auto}
+  .sig-wrap{margin:10px auto 0;width:calc(100% - 28px);max-width:872px}
+  .vbot>*{max-width:720px;margin-left:auto;margin-right:auto}
+  .toast{max-width:520px}
+}
+@keyframes pop{from{transform:translate(-50%,-47%);opacity:.6}to{transform:translate(-50%,-50%);opacity:1}}
+.splash{position:fixed;inset:0;z-index:300;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px}
+.splash .logo{width:84px;height:84px;border-radius:22px;background:#fff;color:var(--navy);font-size:34px;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.splash .err{background:#fff;color:var(--ink);border-radius:14px;padding:16px;margin-top:16px;font-size:14.5px;text-align:left}
+</style>
+</head>
+<body>
+<div id="splash" class="splash"><div><div class="logo">PA</div><div id="splashMsg">Opening…</div></div></div>
+
+<!-- ======================= LIBRARY ======================= -->
+<section id="libView" class="view" hidden>
+  <header class="app">
+    <div class="hrow">
+      <div class="htxt"><h1>Photo Addendum</h1><div class="sub">Phillips Real Estate · Bill &amp; Red Property Management</div></div>
+      <button class="hbtn" id="libMenuBtn" aria-label="Menu">⋯</button>
+    </div>
+  </header>
+  <div class="wrap">
+    <div id="libBanner"></div>
+    <button class="bigbtn" id="newInspBtn">＋ New Inspection</button>
+    <div class="searchrow" id="libSearchRow" hidden><input type="search" id="libSearch" placeholder="Search address, unit or tenant" autocomplete="off" aria-label="Search inspections"></div>
+    <div id="libList"></div>
+    <div class="libfoot" id="libFoot"></div>
+  </div>
+</section>
+
+<!-- ======================= INSPECTION ======================= -->
+<section id="inspView" class="view" hidden>
+  <div class="itop" id="inspTop">
+    <header class="app">
+      <div class="hrow">
+        <button class="hback" id="backBtn">‹ Inspections</button>
+        <button class="savepill saved" id="savePill">✓ Saved</button>
+      </div>
+      <div class="htitle" id="inspTitle">New inspection</div>
+    </header>
+    <div class="stagebar" id="stageBar">
+      <button class="st movein" data-stage="movein"><span class="st-l">Move-In</span><span class="st-p" id="stp_movein"></span></button>
+      <button class="st moveout" data-stage="moveout"><span class="st-l">Move-Out</span><span class="st-p" id="stp_moveout"></span></button>
+      <button class="st afterrepairs" data-stage="afterrepairs"><span class="st-l">After Repairs</span><span class="st-p" id="stp_afterrepairs"></span></button>
+    </div>
+    <div class="progress"><div class="progress-bar" id="progBar"></div></div>
+  </div>
+
+  <div class="wrap">
+    <div class="card" id="detailsCard">
+      <button class="head" id="detailsHead"><h2>Property &amp; Tenant</h2><span class="sum" id="detailsSum"></span><span class="chev">▾</span></button>
+      <div class="body">
+        <label class="fl">Property address<input type="text" id="f_address" placeholder="123 Main St, Monterey, CA" autocomplete="off"></label>
+        <div class="grid2">
+          <label class="fl">Unit #<input type="text" id="f_unit" autocomplete="off"></label>
+          <label class="fl">Inspector<input type="text" id="f_inspector" autocomplete="off"></label>
+        </div>
+        <label class="fl">Tenant(s)<input type="text" id="f_tenant" autocomplete="off"></label>
+        <div class="grid2">
+          <label class="fl">Move-in date<input type="date" id="f_movein"></label>
+          <label class="fl">Move-out date<input type="date" id="f_moveout"></label>
+        </div>
+        <div class="grid2">
+          <label class="fl">Monthly rent<input type="text" id="f_rent" inputmode="decimal" placeholder="$" autocomplete="off"></label>
+          <label class="fl">Security deposit<input type="text" id="f_deposit" inputmode="decimal" placeholder="$" autocomplete="off"></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec-h">
+      <h2>Rooms <span id="roomCount"></span></h2>
+      <div class="sec-btns"><button class="chipbtn solid" id="walkBtn">⚡ Quick Shoot</button><button class="chipbtn" id="stdRoomsBtn">📋 Standard list</button></div>
+    </div>
+    <div id="rooms"></div>
+    <button class="addbtn" id="addRoomBtn">＋ Add Room / Area</button>
+
+    <div class="card" id="notesCard">
+      <button class="head" data-collapse="notesCard"><h2>General Notes</h2><span class="sum" id="notesSum"></span><span class="chev">▾</span></button>
+      <div class="body">
+        <div class="hint" style="margin-top:0">Keys returned, utilities, overall condition — anything not tied to one room.</div>
+        <textarea id="f_gennotes" placeholder="Tap here, then the 🎤 on the keyboard to dictate…"></textarea>
+      </div>
+    </div>
+
+    <div class="card" id="dedCard" hidden>
+      <button class="head" data-collapse="dedCard"><h2>Deposit Worksheet</h2><span class="sum" id="dedSum"></span><span class="chev">▾</span></button>
+      <div class="body" id="dedBody"></div>
+    </div>
+
+    <div class="card" id="sigCard">
+      <button class="head" data-collapse="sigCard"><h2>Signatures</h2><span class="sum" id="sigSum"></span><span class="chev">▾</span></button>
+      <div class="body">
+        <div id="sigList"></div>
+        <div class="sigbtns"><button class="secondary" id="sigTenantBtn">✍️ Tenant signs</button><button class="secondary" id="sigAgentBtn">✍️ Agent signs</button></div>
+      </div>
+    </div>
+    <div class="hint center" style="margin:16px 0 6px">Everything saves automatically on this <span class="devname">iPhone</span>.<br>Back up after each inspection: ⋯ → Back up this inspection.</div>
+  </div>
+
+  <div class="actionbar" id="actionBar">
+    <button class="ab-save" id="saveBtn">💾 Save</button>
+    <button class="ab-pdf" id="pdfBtn">📄 PDF Report</button>
+    <button class="ab-more" id="inspMenuBtn" aria-label="More options">⋯</button>
+  </div>
+</section>
+
+<!-- ======================= OVERLAYS ======================= -->
+<div class="overlay" id="sheet" hidden>
+  <div class="backdrop" id="sheetBackdrop"></div>
+  <div class="sheet" role="dialog" aria-modal="true">
+    <div class="sheet-h"><b id="sheetTitle"></b><button class="sheet-x" id="sheetClose" aria-label="Close">✕</button></div>
+    <div class="sheet-b" id="sheetBody"></div>
+  </div>
+</div>
+
+<div class="overlay dark" id="viewer" hidden>
+  <div class="vtop"><button class="vbtn" id="vClose" aria-label="Close">✕</button><div class="vtitle" id="vTitle"></div><div class="vidx" id="vIdx"></div></div>
+  <div class="vstage" id="vStage"><img id="vImg" alt=""></div>
+  <div class="vbot">
+    <div class="vmeta" id="vMeta"></div>
+    <input class="vcap" id="vCap" type="text" placeholder="Add a caption (prints with the photo)" autocomplete="off">
+    <div class="vbtns">
+      <button class="vbtn nav" id="vPrev" aria-label="Previous">‹</button>
+      <button class="vbtn" id="vMain">★ Make main</button>
+      <button class="vbtn del" id="vDel">🗑 Delete</button>
+      <button class="vbtn nav" id="vNext" aria-label="Next">›</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay cam" id="cam" hidden>
+  <video id="camVideo" playsinline muted autoplay></video>
+  <div class="camtop"><button class="vbtn" id="camDone">Done</button><span class="camstage" id="camStage">MOVE-IN</span><button class="vbtn" id="camTorch" hidden>🔦</button><span id="camTorchSp" style="width:44px"></span></div>
+  <div class="camroom"><button class="vbtn" id="camPrev" aria-label="Previous room">‹</button><div class="rn" id="camRoom"></div><button class="vbtn" id="camNext" aria-label="Next room">›</button></div>
+  <div class="cambot"><div class="camlast" id="camLast"></div><button class="shutter" id="camShutter" aria-label="Take photo"></button><div class="camcount" id="camCount"></div></div>
+  <div class="flash" id="camFlash"></div>
+  <div class="camerr" id="camErr" hidden></div>
+</div>
+
+<div class="overlay sigov" id="sigPad" hidden>
+  <div class="sig-top"><b id="sigTitle">Tenant signature</b><button class="sheet-x" id="sigX" aria-label="Cancel">✕</button></div>
+  <div class="sig-form">
+    <div class="seg" id="sigStageSeg"><button data-v="movein">Move-In</button><button data-v="moveout">Move-Out</button></div>
+    <label class="fl">Printed name<input type="text" id="sigName" autocomplete="off"></label>
+  </div>
+  <div class="sig-ack" id="sigAck"></div>
+  <div class="sig-wrap" id="sigWrap"><canvas id="sigCanvas"></canvas><div class="sig-line"></div><div class="sig-x">✕</div><div class="sig-ph" id="sigPh">Sign here with your finger</div></div>
+  <div class="sig-btns"><button class="secondary" id="sigClear">Clear</button><button class="secondary" id="sigCancel">Cancel</button><button class="primary" id="sigSave">Save signature</button></div>
+</div>
+
+<div class="busy" id="busy" hidden><div class="busy-card"><span class="spin"></span><div class="busy-msg" id="busyMsg">Working…</div><div class="pbar" id="busyBarWrap"><div id="busyBar"></div></div><div class="pmsg" id="busySub"></div></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="importFile" class="vh" accept=".json,application/json,text/plain">
+
+<!-- jsPDF (inlined at build time so PDFs work with no signal) -->
+<script>
+/*__JSPDF_LIB__*/
+</script>
+
+<script>
+(function(){
+'use strict';
+/* =====================================================================
+   PHOTO ADDENDUM v4 — Phillips Real Estate / Bill & Red Property Management
+   Storage: IndexedDB "photo_addendum_v4"
+     inspections (keyPath id) — small JSON per inspection (no image bytes)
+     full  (photoId -> ArrayBuffer JPEG, ~1600px, stamped)
+     thumb (photoId -> ArrayBuffer JPEG, 360px)
+     kv    (settings, ui state, flags)
+   Photos are stored as ArrayBuffers (not Blobs) — WebKit refuses Blobs in
+   IndexedDB in some modes. The v3 database is read for migration only and
+   is never modified.
+   ===================================================================== */
+const APP_VERSION='4.0';
+const DB_NAME='photo_addendum_v4';
+const V3_DB='phillips_photo_addendum_db', V3_STORE='project', V3_KEY='current', V3_LS='phillips_photo_addendum_v1';
+const STAGES=['movein','moveout','afterrepairs'];
+const STAGE_NAME={movein:'Move-In',moveout:'Move-Out',afterrepairs:'After Repairs'};
+const STAGE_LONG={movein:'Move-In',moveout:'Move-Out',afterrepairs:'After Repairs / Cleaning'};
+const AREA_OPTIONS=["Entry / Front Door","Living Area","Dining Area","Kitchen","Kitchen Appliances","Bathroom","Master Bathroom","Half Bath","Bedroom","Master Bedroom","Hallway","Stairs","Closet","Laundry Area","Garage","Patio / Balcony","Yard / Landscaping","Exterior / Front","Walls / Ceiling","Flooring / Carpet","Windows / Coverings","Lighting / Fans","Heating / A/C","Water Heater","Smoke / CO Detectors","Keys / Remotes","Other","N/A"];
+const DEFAULT_ROOMS=["Entry / Front Door","Living Area","Dining Area","Kitchen","Kitchen Appliances","Bathroom","Bedroom","Hallway","Closet","Walls / Ceiling","Flooring / Carpet","Windows / Coverings","Smoke / CO Detectors","Keys / Remotes","Exterior / Front"];
+const DEFAULT_PHRASES=["Clean","Good condition","New","Freshly painted","Minor wear","Scuffs","Nail holes","Scratches","Stains","Chipped","Cracked","Dirty","Needs cleaning","Damaged","Missing","Not working"];
+const CONDS=[['good','Good'],['fair','Fair'],['poor','Poor']];
+const TAGS=[['wear','Normal wear'],['cleaning','Cleaning'],['damage','Damage']];
+const ACK_TEXT='I acknowledge that the photographs and notes in this Photo Addendum fairly depict the condition of the premises as of the date signed.';
+const LEGAL_LINE='Date-stamped condition photos per California Civil Code § 1950.5 / AB 2801. Retained at least four years.';
+const BRAND_LINE='337 El Dorado St., Ste. 3-B, Monterey, CA · 831-372-8092 · bill@billandred.com · DRE #00625289';
+const DEFAULT_SETTINGS={inspector:'Bill Phillips',stamp:true,quality:'standard',rooms:DEFAULT_ROOMS.slice(),phrases:DEFAULT_PHRASES.slice()};
+const PHOTO_MAX={standard:1600,high:2400};
+const THUMB_MAX=360;
+const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
+
+let settings=JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+let lib=[];           // inspections (fresh from storage when the library is shown)
+let cur=null;         // the open inspection
+let openRid=null;     // expanded room
+const thumbCache=new Map();
+const pending=new Map();   // "roomId:stage" -> photos still processing
+const errLog=[];
+let migratedNote='';
+
+/* ============================== UTIL ============================== */
+const $=id=>document.getElementById(id);
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,9); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function pad2(n){ return (n<10?'0':'')+n; }
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtTime(ms){ const d=new Date(ms); let h=d.getHours(); const ap=h>=12?'PM':'AM'; h=h%12||12; return h+':'+pad2(d.getMinutes())+' '+ap; }
+function fmtStamp(ms){ const d=new Date(ms); return pad2(d.getMonth()+1)+'/'+pad2(d.getDate())+'/'+d.getFullYear()+' '+fmtTime(ms); }
+function fmtStampLong(ms){ const d=new Date(ms); return MON[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()+' · '+fmtTime(ms); }
+function fmtShort(ms){ if(!ms) return ''; const d=new Date(ms), n=new Date(); if(d.toDateString()===n.toDateString()) return 'today '+fmtTime(ms); const y=new Date(n.getTime()-864e5); if(d.toDateString()===y.toDateString()) return 'yesterday'; return MON[d.getMonth()]+' '+d.getDate()+(d.getFullYear()!==n.getFullYear()?', '+d.getFullYear():''); }
+function fmtYMD(s){ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||''); return m?(m[2]+'/'+m[3]+'/'+m[1]):(s||''); }
+function todayYMD(){ const d=new Date(); return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate()); }
+function parseMoney(s){ const n=parseFloat(String(s==null?'':s).replace(/[^0-9.]/g,'')); return isFinite(n)?n:0; }
+function fmtMoney(n){ return '$'+(Math.round(n*100)/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,','); }
+function fmtMB(b){ return b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB'; }
+function slug(s){ return String(s||'').replace(/[^a-z0-9]+/gi,'_').replace(/^_+|_+$/g,'').slice(0,40); }
+function photoCountText(n){ return n+' photo'+(n===1?'':'s'); }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function nextFrame(){ return new Promise(r=>requestAnimationFrame(()=>setTimeout(r,0))); }
+function logErr(where,e){ const msg=(e&&(e.message||e.name))||String(e); errLog.push(new Date().toTimeString().slice(0,8)+' '+where+': '+msg); if(errLog.length>40) errLog.shift(); try{ console.error('[PA]',where,e); }catch(_){} }
+function isStandalone(){ try{ return !!(navigator.standalone||window.matchMedia('(display-mode: standalone)').matches); }catch(e){ return false; } }
+function isIOS(){ return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1); }
+const DEV=(/iPad/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1))?'iPad':(/iPhone|iPod/.test(navigator.userAgent)?'iPhone':'device');
+
+function abToB64(ab){ const u=new Uint8Array(ab); let s=''; for(let i=0;i<u.length;i+=0x8000){ s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); } return btoa(s); }
+function b64ToAB(b64){ const s=atob(b64); const u=new Uint8Array(s.length); for(let i=0;i<s.length;i++) u[i]=s.charCodeAt(i); return u.buffer; }
+function dataURLToAB(u){ u=String(u); return b64ToAB(u.slice(u.indexOf(',')+1)); }
+function blobToAB(b){ if(b.arrayBuffer) return b.arrayBuffer(); return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(r.error); r.readAsArrayBuffer(b); }); }
+function blobToText(b){ if(b.text) return b.text(); return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>rej(r.error); r.readAsText(b); }); }
+function jpegBlob(ab){ return new Blob([ab],{type:'image/jpeg'}); }
+
+/* ============================== STORAGE ============================== */
+let _db=null, _dbOpening=null;
+function openDB(){
+  if(_db) return Promise.resolve(_db);
+  if(_dbOpening) return _dbOpening;
+  _dbOpening=new Promise((res,rej)=>{
+    let rq;
+    try{ if(!window.indexedDB) throw new Error('IndexedDB is not available'); rq=indexedDB.open(DB_NAME,1); }
+    catch(e){ _dbOpening=null; return rej(e); }
+    rq.onupgradeneeded=()=>{ const d=rq.result;
+      if(!d.objectStoreNames.contains('inspections')) d.createObjectStore('inspections',{keyPath:'id'});
+      if(!d.objectStoreNames.contains('full')) d.createObjectStore('full');
+      if(!d.objectStoreNames.contains('thumb')) d.createObjectStore('thumb');
+      if(!d.objectStoreNames.contains('kv')) d.createObjectStore('kv'); };
+    rq.onsuccess=()=>{ _db=rq.result; _dbOpening=null;
+      _db.onversionchange=()=>{ try{ _db.close(); }catch(e){} _db=null; };
+      try{ _db.onclose=()=>{ _db=null; }; }catch(e){}
+      res(_db); };
+    rq.onerror=()=>{ _dbOpening=null; rej(rq.error||new Error('Could not open storage')); };
+  });
+  return _dbOpening;
+}
+function _run(stores,mode,body){
+  return openDB().then(d=>new Promise((res,rej)=>{
+    let t; try{ t=d.transaction(stores,mode); }catch(e){ return rej(e); }
+    let out; try{ out=body(t); }catch(e){ try{ t.abort(); }catch(_){} return rej(e); }
+    t.oncomplete=()=>{ try{ res(typeof out==='function'?out():out); }catch(e){ rej(e); } };
+    t.onerror=()=>rej(t.error||new Error('Storage error'));
+    t.onabort=()=>rej(t.error||new Error('Storage write was cancelled'));
+  }));
+}
+async function tx(stores,mode,body){
+  try{ return await _run(stores,mode,body); }
+  catch(e){
+    // iOS can drop the IndexedDB connection after the app is backgrounded — reopen once and retry.
+    const n=(e&&e.name)||'', m=(e&&e.message)||'';
+    if(n==='InvalidStateError'||n==='UnknownError'||/connection|closing|closed|lost/i.test(m)){
+      try{ if(_db) _db.close(); }catch(_){} _db=null;
+      return await _run(stores,mode,body);
+    }
+    throw e;
+  }
+}
+function dbGet(store,key){ let rq; return tx([store],'readonly',t=>{ rq=t.objectStore(store).get(key); return ()=>rq.result; }); }
+function dbGetMany(store,keys){ const rqs=[]; return tx([store],'readonly',t=>{ const s=t.objectStore(store); keys.forEach(k=>rqs.push(s.get(k))); return ()=>rqs.map(r=>r.result); }); }
+function dbGetAll(store){ let rq; return tx([store],'readonly',t=>{ rq=t.objectStore(store).getAll(); return ()=>rq.result||[]; }); }
+function dbGetPhoto(id){ let a,b; return tx(['full','thumb'],'readonly',t=>{ a=t.objectStore('full').get(id); b=t.objectStore('thumb').get(id); return ()=>({full:a.result,thumb:b.result}); }); }
+function dbWrite(ops){
+  const stores=Array.from(new Set(ops.map(o=>o.s)));
+  return tx(stores,'readwrite',t=>{ ops.forEach(o=>{ const st=t.objectStore(o.s); if(o.del) st.delete(o.k); else if(o.k===undefined) st.put(o.v); else st.put(o.v,o.k); }); return ()=>true; });
+}
+const kvGet=k=>dbGet('kv',k);
+const kvPut=(k,v)=>dbWrite([{s:'kv',k:k,v:v}]);
+function storageError(e){
+  if(e&&(e.name==='QuotaExceededError'||/quota|space|disk/i.test(e.message||''))) return new Error('This '+DEV+' is out of storage space — the photo was not saved. Free up some space and try again.');
+  return e;
+}
+
+/* ============================== MODEL ============================== */
+function blankStage(){ return {photos:[],note:'',cond:''}; }
+function blankRoom(area,custom){ return {id:uid(),area:area||'Other',custom:custom||'',tag:'',charge:'',movein:blankStage(),moveout:blankStage(),afterrepairs:blankStage()}; }
+function newInspection(){
+  return {id:uid(),v:4,created:Date.now(),updated:Date.now(),
+    details:{address:'',unit:'',inspector:settings.inspector||'',tenant:'',movein:todayYMD(),moveout:'',rent:'',deposit:'',gennotes:''},
+    stage:'movein',areas:[],signatures:[],backupTs:0};
+}
+function normalizeInsp(x){
+  x.v=4;
+  x.details=Object.assign({address:'',unit:'',inspector:'',tenant:'',movein:'',moveout:'',rent:'',deposit:'',gennotes:''},x.details||{});
+  if(STAGES.indexOf(x.stage)<0) x.stage='movein';
+  if(!Array.isArray(x.areas)) x.areas=[];
+  x.areas.forEach(r=>{
+    if(!r.id) r.id=uid(); if(r.area==null) r.area='Other'; if(r.custom==null) r.custom=''; if(r.tag==null) r.tag=''; if(r.charge==null) r.charge='';
+    STAGES.forEach(st=>{ const sd=r[st]||(r[st]={}); if(!Array.isArray(sd.photos)) sd.photos=[]; if(sd.note==null) sd.note=''; if(sd.cond==null) sd.cond=''; sd.photos.forEach(p=>{ if(p.cap==null) p.cap=''; }); });
+  });
+  if(!Array.isArray(x.signatures)) x.signatures=[];
+  if(!x.created) x.created=Date.now(); if(!x.updated) x.updated=x.created; if(!x.backupTs) x.backupTs=0;
+  return x;
+}
+function allPhotos(insp){ const out=[]; (insp.areas||[]).forEach(r=>STAGES.forEach(st=>((r[st]&&r[st].photos)||[]).forEach(p=>out.push(p)))); return out; }
+function countStage(insp,st){ let n=0; (insp.areas||[]).forEach(r=>{ n+=((r[st]&&r[st].photos)||[]).length; }); return n; }
+function roomTitle(r){ return r.custom?(r.area+' — '+r.custom):r.area; }
+function unitText(u){ u=String(u||'').trim(); if(!u) return ''; return /^(unit|apt|apartment|suite|ste\b|#)/i.test(u)?u:'Unit '+u; }
+function inspTitle(x){ const d=x.details||{}; const a=(d.address||'').trim(); const u=unitText(d.unit); return a?(a+(u?' · '+u:'')):(u||'New inspection'); }
+function findRoom(rid,insp){ insp=insp||cur; return insp?insp.areas.find(r=>r.id===rid)||null:null; }
+function condLabel(c){ const f=CONDS.find(x=>x[0]===c); return f?f[1]:''; }
+function tagLabel(t){ const f=TAGS.find(x=>x[0]===t); return f?f[1]:''; }
+function roleLabel(r){ return r==='agent'?'Landlord / Agent':'Tenant'; }
+function countable(r){ return r.area!=='N/A'; }
+function stageProgress(insp,st){ const rooms=insp.areas.filter(countable); return {done:rooms.filter(r=>r[st].photos.length>0).length,total:rooms.length}; }
+function hasCharge(r){ return (r.tag==='damage'||r.tag==='cleaning')&&parseMoney(r.charge)>0; }
+function sumCharges(insp){ return insp.areas.reduce((s,r)=>s+(hasCharge(r)?parseMoney(r.charge):0),0); }
+function isBackedUp(x){ return x.backupTs&&x.backupTs>=(x.updated||0); }
+
+/* ============================== SAVING ============================== */
+let saveTimer=null, saving=null, dirty=false, lastSaved=0, slowTimer=null;
+function setSaveStatus(kind,err){
+  const p=$('savePill'); if(!p) return;
+  p.classList.remove('saved','saving','error');
+  if(kind==='saving'){ p.classList.add('saving'); p.textContent='Saving…'; }
+  else if(kind==='error'){ p.classList.add('error'); p.textContent='⚠ Not saved'; p.dataset.err=(err&&err.message)||''; }
+  else { p.classList.add('saved'); p.textContent='✓ Saved'; }
+}
+function changed(delay){ if(!cur) return; cur.updated=Date.now(); queueSave(delay); }
+function queueSave(delay){ if(!cur) return; dirty=true; clearTimeout(saveTimer); saveTimer=setTimeout(flushSave,delay==null?400:delay); }
+// Writes only when something changed. Never queues a second write on the way out —
+// a write started while the browser freezes the page can lock storage for the next launch.
+function flushSave(){
+  clearTimeout(saveTimer); saveTimer=null;
+  if(saving) return saving;              // the running save loop picks up any newer change
+  if(!cur||!dirty) return Promise.resolve(true);
+  const insp=cur, startedHidden=document.visibilityState==='hidden';
+  clearTimeout(slowTimer); slowTimer=setTimeout(()=>setSaveStatus('saving'),300);
+  saving=(async()=>{
+    let ok=true;
+    try{ while(dirty&&cur===insp){ dirty=false; await dbWrite([{s:'inspections',v:insp}]); if(document.visibilityState==='hidden') break; } lastSaved=Date.now(); }
+    catch(e){ ok=false; dirty=true; logErr('save',e); }
+    clearTimeout(slowTimer);
+    saving=null;
+    if(!ok&&startedHidden){ queueSave(800); return ok; } // a save interrupted by leaving the app — quietly retry once back
+    if(cur===insp) setSaveStatus(ok?'saved':'error', ok?null:new Error('Storage error'));
+    if(!ok) toast('⚠ Couldn’t save on this device. Tap ⋯ → Back up this inspection to protect your work.',null,null,6000);
+    return ok;
+  })();
+  return saving;
+}
+
+/* ============================== UI PRIMITIVES ============================== */
+let toastTimer=null, toastFinal=null;
+function finalizeToast(){ const f=toastFinal; toastFinal=null; if(f){ try{ f(); }catch(e){ logErr('toastFinal',e); } } }
+function toast(msg,actLabel,actFn,ms,onExpire){
+  finalizeToast();
+  const t=$('toast');
+  t.innerHTML='<span>'+esc(msg)+'</span>'+(actLabel?'<button type="button">'+esc(actLabel)+'</button>':'');
+  t.classList.add('show');
+  toastFinal=onExpire||null;
+  const b=t.querySelector('button');
+  if(b) b.onclick=()=>{ toastFinal=null; hideToast(); if(actFn) actFn(); };
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>{ hideToast(); finalizeToast(); },ms||3000);
+}
+function hideToast(){ clearTimeout(toastTimer); $('toast').classList.remove('show'); }
+
+let sheetOnClose=null;
+function openSheet(title,html,onMount,onClose){
+  $('sheetTitle').textContent=title; $('sheetBody').innerHTML=html; $('sheet').hidden=false; document.body.classList.add('noscroll');
+  $('sheetBody').scrollTop=0; sheetOnClose=onClose||null;
+  if(onMount) onMount($('sheetBody'));
+}
+function closeSheet(){ if($('sheet').hidden) return; $('sheet').hidden=true; $('sheetBody').innerHTML=''; $('sheetBody').onclick=null; document.body.classList.remove('noscroll'); const f=sheetOnClose; sheetOnClose=null; if(f) f(); }
+function menuSheet(title,items){
+  openSheet(title,items.map((it,i)=>it.sep?'<div class="menu-sep"></div>':
+    '<button class="menu-item'+(it.danger?' danger':'')+'" data-i="'+i+'"><span class="mi-ic">'+(it.icon||'')+'</span><span>'+esc(it.label)+(it.sub?'<small>'+esc(it.sub)+'</small>':'')+'</span></button>').join(''),
+    body=>{ body.onclick=e=>{ const b=e.target.closest('[data-i]'); if(!b) return; const it=items[+b.dataset.i]; closeSheet(); if(it.onClick) it.onClick(); }; });
+}
+function chooseSheet(title,message,options){
+  return new Promise(resolve=>{
+    let done=false;
+    openSheet(title,'<p style="margin:4px 2px 12px;font-size:15px">'+esc(message)+'</p>'+options.map((o,i)=>'<button class="'+(o.primary?'primary':'secondary')+' wide" style="margin-top:8px'+(o.danger?';color:var(--red)':'')+'" data-i="'+i+'">'+esc(o.label)+'</button>').join(''),
+      body=>{ body.onclick=e=>{ const b=e.target.closest('[data-i]'); if(!b) return; done=true; const v=options[+b.dataset.i].value; closeSheet(); resolve(v); }; },
+      ()=>{ if(!done) resolve(null); });
+  });
+}
+const busy={
+  show(msg){ $('busyMsg').textContent=msg||'Working…'; $('busySub').textContent=''; $('busyBar').style.width='0%'; $('busyBarWrap').hidden=true; $('busy').hidden=false; },
+  prog(i,n,sub){ $('busyBarWrap').hidden=false; $('busyBar').style.width=(n?Math.round(i/n*100):0)+'%'; if(sub!=null) $('busySub').textContent=sub; },
+  hide(){ $('busy').hidden=true; }
+};
+
+/* ============================== PHOTO PIPELINE ============================== */
+function decodeImage(blob){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(blob); const img=new Image();
+    img.onload=()=>res({img:img,url:url});
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error('That file isn’t a readable photo.')); };
+    img.src=url;
+  });
+}
+function canvasToAB(cv,q){
+  return new Promise((res,rej)=>{
+    if(cv.toBlob){ cv.toBlob(b=>{ if(!b) return rej(new Error('Couldn’t encode the photo (low memory?)')); blobToAB(b).then(res,rej); },'image/jpeg',q); }
+    else { try{ res(dataURLToAB(cv.toDataURL('image/jpeg',q))); }catch(e){ rej(e); } }
+  });
+}
+function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r); ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); }
+function stampLines(insp,ts,stage){
+  const d=(insp&&insp.details)||{};
+  const place=[(d.address||'').trim(),unitText(d.unit)].filter(Boolean).join(', ');
+  return [fmtStampLong(ts),(place?place+' · ':'')+STAGE_NAME[stage].toUpperCase()];
+}
+function drawStamp(ctx,w,h,lines){
+  const fs=Math.max(13,Math.round(Math.max(w,h)*0.019));
+  ctx.font='600 '+fs+'px -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif';
+  ctx.textBaseline='top';
+  const maxW=w*0.9-fs;
+  lines=lines.map(l=>{ if(ctx.measureText(l).width<=maxW) return l; let s=l; while(s.length>4&&ctx.measureText(s+'…').width>maxW) s=s.slice(0,-1); return s+'…'; });
+  const pad=Math.round(fs*0.5), lh=Math.round(fs*1.28);
+  const tw=Math.max.apply(null,lines.map(l=>ctx.measureText(l).width));
+  const bw=Math.ceil(tw+pad*2), bh=lh*lines.length+Math.round(pad*1.1);
+  const x=w-bw-Math.round(fs*0.6), y=h-bh-Math.round(fs*0.6);
+  ctx.fillStyle='rgba(0,0,0,0.58)'; rr(ctx,x,y,bw,bh,Math.round(fs*0.35)); ctx.fill();
+  ctx.fillStyle='#fff';
+  lines.forEach((l,i)=>ctx.fillText(l,x+pad,y+Math.round(pad*0.6)+i*lh));
+}
+// Draw any image source into a fresh canvas, stamp it, encode full + thumbnail.
+async function makePhoto(source,sw,sh,info){
+  if(!sw||!sh) throw new Error('Photo has no size (unsupported format?)');
+  const max=PHOTO_MAX[settings.quality]||1600;
+  let w=sw,h=sh; if(Math.max(w,h)>max){ const r=max/Math.max(w,h); w=Math.round(w*r); h=Math.round(h*r); }
+  const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+  const ctx=cv.getContext('2d'); if(!ctx) throw new Error('Out of memory drawing the photo');
+  ctx.imageSmoothingEnabled=true; try{ ctx.imageSmoothingQuality='high'; }catch(e){}
+  ctx.drawImage(source,0,0,w,h);
+  let stamped=false;
+  if(settings.stamp){ drawStamp(ctx,w,h,stampLines(info.insp,info.ts,info.stage)); stamped=true; }
+  const full=await canvasToAB(cv,0.8);
+  let tw=w,th=h; if(Math.max(tw,th)>THUMB_MAX){ const r=THUMB_MAX/Math.max(tw,th); tw=Math.round(tw*r); th=Math.round(th*r); }
+  const tc=document.createElement('canvas'); tc.width=tw; tc.height=th;
+  const tctx=tc.getContext('2d'); tctx.imageSmoothingEnabled=true; try{ tctx.imageSmoothingQuality='high'; }catch(e){}
+  tctx.drawImage(cv,0,0,tw,th);
+  const thumb=await canvasToAB(tc,0.72);
+  cv.width=cv.height=1; tc.width=tc.height=1; // release canvas memory right away (iOS caps total canvas memory)
+  return {meta:{id:uid(),ts:info.ts,w:w,h:h,src:info.src,dateSrc:info.dateSrc,stamped:stamped,cap:''},full:full,thumb:thumb};
+}
+// Downscale stored JPEG bytes (for thumbnails of imported photos and email-size PDFs)
+async function shrinkJPEG(ab,max,q){
+  const blob=jpegBlob(ab); let src=null,url=null,w,h;
+  if(window.createImageBitmap){ try{ src=await createImageBitmap(blob); w=src.width; h=src.height; }catch(e){ src=null; } }
+  if(!src){ const d=await decodeImage(blob); src=d.img; url=d.url; w=src.naturalWidth; h=src.naturalHeight; }
+  try{
+    const r=Math.min(1,max/Math.max(w,h)); const tw=Math.max(1,Math.round(w*r)), th=Math.max(1,Math.round(h*r));
+    const cv=document.createElement('canvas'); cv.width=tw; cv.height=th;
+    const ctx=cv.getContext('2d'); ctx.imageSmoothingEnabled=true; try{ ctx.imageSmoothingQuality='high'; }catch(e){}
+    ctx.drawImage(src,0,0,tw,th);
+    const out=await canvasToAB(cv,q); cv.width=cv.height=1;
+    return {ab:out,w:tw,h:th,ow:w,oh:h};
+  }finally{ if(src&&src.close) src.close(); if(url) URL.revokeObjectURL(url); }
+}
+// EXIF DateTimeOriginal — camera-roll photos otherwise get the time you picked them, not when they were taken.
+function exifDateFromAB(ab){
+  try{
+    const v=new DataView(ab); if(v.byteLength<4||v.getUint16(0)!==0xFFD8) return null;
+    let off=2;
+    while(off+4<=v.byteLength){
+      const marker=v.getUint16(off); if((marker&0xFF00)!==0xFF00) return null;
+      const len=v.getUint16(off+2);
+      if(marker===0xFFE1&&off+10<=v.byteLength&&v.getUint32(off+4)===0x45786966) return exifTiff(v,off+10);
+      if(marker===0xFFDA) return null;
+      off+=2+len;
+    }
+  }catch(e){}
+  return null;
+}
+function exifTiff(v,start){
+  const le=v.getUint16(start)===0x4949;
+  const u16=o=>v.getUint16(start+o,le), u32=o=>v.getUint32(start+o,le);
+  if(u16(2)!==42) return null;
+  const str=(o,n)=>{ let s=''; for(let i=0;i<n-1&&start+o+i<v.byteLength;i++){ const c=v.getUint8(start+o+i); if(!c) break; s+=String.fromCharCode(c); } return s; };
+  const tags=(ifd,want)=>{ const out={}; const n=u16(ifd); for(let i=0;i<n;i++){ const e=ifd+2+i*12; const tag=u16(e); if(want.indexOf(tag)<0) continue; const type=u16(e+2),cnt=u32(e+4); if(type===2) out[tag]=str(cnt>4?u32(e+8):e+8,cnt); else if(type===4) out[tag]=u32(e+8); else if(type===3) out[tag]=u16(e+8); } return out; };
+  const t0=tags(u32(4),[0x8769,0x0132]);
+  let dto=null,ofs=null;
+  if(t0[0x8769]){ const ex=tags(t0[0x8769],[0x9003,0x9011]); dto=ex[0x9003]; ofs=ex[0x9011]; }
+  const s=dto||t0[0x0132]; if(!s) return null;
+  const m=/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})/.exec(s); if(!m) return null;
+  let ms;
+  if(ofs&&/^[+-]\d{2}:\d{2}$/.test(ofs)) ms=Date.parse(m[1]+'-'+m[2]+'-'+m[3]+'T'+m[4]+':'+m[5]+':'+m[6]+ofs);
+  else ms=new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]).getTime();
+  return (isFinite(ms)&&ms>946684800000&&ms<Date.now()+2*864e5)?ms:null;
+}
+async function readExifDate(file){ try{ return exifDateFromAB(await blobToAB(file.slice(0,262144))); }catch(e){ return null; } }
+
+async function commitPhoto(insp,r,st,p){
+  if(insp.areas.indexOf(r)<0) throw new Error('That room was deleted.');
+  r[st].photos.push(p.meta); insp.updated=Date.now();
+  try{ await dbWrite([{s:'full',k:p.meta.id,v:p.full},{s:'thumb',k:p.meta.id,v:p.thumb},{s:'inspections',v:insp}]); }
+  catch(e){ const i=r[st].photos.indexOf(p.meta); if(i>=0) r[st].photos.splice(i,1); throw storageError(e); }
+  thumbCache.set(p.meta.id,URL.createObjectURL(jpegBlob(p.thumb)));
+  if(cur===insp){ lastSaved=Date.now(); setSaveStatus('saved'); }
+}
+async function addFiles(r,st,files,src){
+  const insp=cur; if(!insp||!files.length) return;
+  const key=r.id+':'+st;
+  pending.set(key,(pending.get(key)||0)+files.length); if(cur===insp) refreshRoom(r);
+  let failed=0,lastErr='';
+  for(const f of files){
+    try{
+      const exifTs=await readExifDate(f);
+      const ts=exifTs||((f.lastModified>0&&f.lastModified<Date.now()+60000)?f.lastModified:Date.now());
+      const d=await decodeImage(f);
+      let p; try{ p=await makePhoto(d.img,d.img.naturalWidth||d.img.width,d.img.naturalHeight||d.img.height,{ts:ts,stage:st,src:src,dateSrc:exifTs?'exif':'file',insp:insp}); }
+      finally{ URL.revokeObjectURL(d.url); }
+      await commitPhoto(insp,r,st,p);
+    }catch(e){ failed++; lastErr=(e&&e.message)||String(e); logErr('addFiles',e); }
+    pending.set(key,Math.max(0,(pending.get(key)||1)-1));
+    if(cur===insp) refreshRoom(r);
+  }
+  if(failed) toast(failed+' photo'+(failed>1?'s':'')+' couldn’t be added. '+lastErr,null,null,6000);
+}
+async function ensureThumbs(ids){
+  const miss=ids.filter(id=>id&&!thumbCache.has(id)); if(!miss.length) return;
+  const vals=await dbGetMany('thumb',miss);
+  miss.forEach((id,i)=>{ if(vals[i]) thumbCache.set(id,URL.createObjectURL(jpegBlob(vals[i]))); });
+}
+function loadThumbImgs(root){
+  if(!root) return;
+  const imgs=Array.prototype.slice.call(root.querySelectorAll('img[data-pid]'));
+  const need=imgs.filter(im=>!im.getAttribute('src')).map(im=>im.dataset.pid);
+  const apply=()=>imgs.forEach(im=>{ const u=thumbCache.get(im.dataset.pid); if(u&&im.getAttribute('src')!==u) im.src=u; });
+  if(!need.length){ apply(); return; }
+  ensureThumbs(need).then(apply).catch(e=>logErr('thumbs',e));
+}
+function dropPhotoBytes(ids){
+  if(!ids.length) return Promise.resolve();
+  const ops=[]; ids.forEach(id=>{ ops.push({s:'full',k:id,del:true},{s:'thumb',k:id,del:true}); const u=thumbCache.get(id); if(u){ URL.revokeObjectURL(u); thumbCache.delete(id); } });
+  return dbWrite(ops).catch(e=>logErr('dropBytes',e));
+}
+
+/* ============================== LIBRARY ============================== */
+function withTimeout(p,ms,what){ let t; return Promise.race([p,new Promise((_,rej)=>{ t=setTimeout(()=>rej(new Error(what+' is taking too long')),ms); })]).then(v=>{ clearTimeout(t); return v; },e=>{ clearTimeout(t); throw e; }); }
+// strict=true (startup): throw instead of ever showing an empty library by mistake
+async function loadLibrary(strict){
+  try{ const all=await withTimeout(dbGetAll('inspections'),9000,'Reading your inspections'); lib=all.map(normalizeInsp); }
+  catch(e){ logErr('lib',e); if(strict) throw e; toast('Couldn’t refresh the list: '+e.message,null,null,5000); }
+  lib.sort((a,b)=>(b.updated||0)-(a.updated||0));
+}
+function firstPhotoId(x){ for(const r of x.areas){ for(const st of STAGES){ if(r[st].photos.length) return r[st].photos[0].id; } } return null; }
+function cardHTML(x){
+  const d=x.details, mi=countStage(x,'movein'), mo=countStage(x,'moveout'), ar=countStage(x,'afterrepairs');
+  const pid=firstPhotoId(x), sg=(x.signatures||[]).length;
+  const bk=isBackedUp(x)?'<span class="bk ok">✓ Backed up '+esc(fmtShort(x.backupTs))+'</span>':(x.backupTs?'<span class="bk warn">Changed since backup</span>':(mi+mo+ar?'<span class="bk warn">Not backed up</span>':''));
+  const sub=[d.tenant?('Tenant: '+d.tenant):'',d.movein?('In '+fmtYMD(d.movein)):'',d.moveout?('Out '+fmtYMD(d.moveout)):''].filter(Boolean).join(' · ')||'No tenant entered';
+  return '<div class="icard" data-iid="'+esc(x.id)+'"><button class="ic-main" data-act="open">'+
+    (pid?'<img class="ic-img" data-pid="'+esc(pid)+'" alt="">':'<span class="ic-img">🏠</span>')+
+    '<span class="ic-txt"><b>'+esc(inspTitle(x))+'</b><small>'+esc(sub)+'</small>'+
+    '<span class="ic-chips"><span class="chip mi'+(mi?'':' off')+'">Move-In '+(mi||'—')+'</span><span class="chip mo'+(mo?'':' off')+'">Move-Out '+(mo||'—')+'</span>'+(ar?'<span class="chip ar">Repairs '+ar+'</span>':'')+(sg?'<span class="chip sg">✍ '+sg+'</span>':'')+'</span>'+
+    '<span class="ic-foot">Edited '+esc(fmtShort(x.updated||x.created))+(bk?' · '+bk:'')+'</span></span></button>'+
+    '<button class="ic-more" data-act="more" aria-label="Options">⋯</button></div>';
+}
+function renderLibrary(){
+  const q=($('libSearch').value||'').trim().toLowerCase();
+  $('libSearchRow').hidden=lib.length<4;
+  const list=lib.filter(x=>{ if(!q) return true; const d=x.details; return [d.address,d.unit,d.tenant].join(' ').toLowerCase().indexOf(q)>=0; });
+  const root=$('libList');
+  if(!lib.length) root.innerHTML='<div class="empty-lib"><div class="el-ic">🏠</div><b>No inspections yet</b>Tap <b style="display:inline;font-size:inherit">＋ New Inspection</b> to start a walkthrough. Every inspection stays saved on this '+DEV+', so you can reopen it at move-out.</div>';
+  else if(!list.length) root.innerHTML='<div class="hint center" style="margin-top:18px">No inspections match “'+esc(q)+'”.</div>';
+  else root.innerHTML=list.map(cardHTML).join('');
+  loadThumbImgs(root);
+  renderLibBanner(); renderLibFoot();
+}
+function renderLibBanner(){
+  const b=$('libBanner');
+  if(isIOS()&&!isStandalone()){
+    b.innerHTML='<div class="banner info"><span>For the best experience, tap <b>Share → Add to Home Screen</b> and use the app from its icon. Inspections saved in a Safari tab are kept separately.</span></div>'; return;
+  }
+  const risky=lib.filter(x=>allPhotos(x).length&&!isBackedUp(x)&&Date.now()-(x.updated||0)>864e5);
+  b.innerHTML=risky.length?'<div class="banner"><span>⚠️ <b>'+risky.length+' inspection'+(risky.length>1?'s aren’t':' isn’t')+' backed up.</b> If this '+DEV+' is lost, they’re gone.</span><button data-act="backupall">Back up</button></div>':'';
+}
+async function renderLibFoot(){
+  const n=lib.length, p=lib.reduce((s,x)=>s+allPhotos(x).length,0);
+  let txt='Saved on this '+DEV+': '+n+' inspection'+(n===1?'':'s')+' · '+p+' photo'+(p===1?'':'s');
+  try{ if(navigator.storage&&navigator.storage.persisted){ const ps=await navigator.storage.persisted(); txt+='<br>'+(ps?'🔒 Storage protected from automatic cleanup':'Storage protection: not granted yet'); } }catch(e){}
+  $('libFoot').innerHTML=txt+'<br>Photo Addendum v'+APP_VERSION;
+}
+async function showLibrary(){
+  if(cur){ await flushSave(); stopDictation(); }
+  cur=null; openRid=null; persistUI();
+  closeAllOverlays();
+  $('inspView').hidden=true; $('libView').hidden=false; document.body.classList.remove('typing');
+  await loadLibrary(); renderLibrary(); window.scrollTo(0,0);
+}
+function libCardMenu(x){
+  menuSheet(inspTitle(x),[
+    {icon:'📂',label:'Open',onClick:()=>openInspection(x.id)},
+    {icon:'💾',label:'Back up this inspection',sub:'Save a copy with all photos to Files or email',onClick:()=>openBackupSheet([x.id])},
+    {icon:'🔁',label:'Start next tenancy (same unit)',sub:'New inspection with this address and room list',onClick:()=>startNextTenancy(x)},
+    {sep:true},
+    {icon:'🗑',label:'Delete inspection',danger:true,onClick:()=>confirmDeleteInspection(x)}
+  ]);
+}
+async function createInspection(){
+  const x=newInspection();
+  try{ await dbWrite([{s:'inspections',v:x}]); }catch(e){ toast('Couldn’t create the inspection: '+e.message,null,null,6000); return; }
+  await openInspection(x.id);
+}
+async function startNextTenancy(src){
+  const x=newInspection();
+  ['address','unit','rent','deposit'].forEach(k=>{ x.details[k]=src.details[k]||''; });
+  x.areas=src.areas.map(r=>blankRoom(r.area,r.custom));
+  try{ await dbWrite([{s:'inspections',v:x}]); }catch(e){ toast('Couldn’t create the inspection: '+e.message); return; }
+  await openInspection(x.id);
+  toast('New inspection started with the same address and '+x.areas.length+' rooms');
+}
+async function confirmDeleteInspection(x){
+  const n=allPhotos(x).length;
+  const v=await chooseSheet('Delete inspection?','“'+inspTitle(x)+'” and its '+photoCountText(n)+' will be permanently erased from this '+DEV+'.'+(isBackedUp(x)?'':' It has NOT been backed up.'),
+    [{label:'Delete permanently',value:'del',danger:true},{label:'Keep it',value:null,primary:true}]);
+  if(v!=='del') return;
+  const ids=allPhotos(x).map(p=>p.id);
+  try{ await dbWrite([{s:'inspections',k:x.id,del:true}]); await dropPhotoBytes(ids); }
+  catch(e){ toast('Couldn’t delete: '+e.message); return; }
+  if(cur&&cur.id===x.id){ cur=null; await showLibrary(); } else { await loadLibrary(); renderLibrary(); }
+  toast('Inspection deleted');
+}
+
+/* ============================== INSPECTION VIEW ============================== */
+async function openInspection(id,opts){
+  opts=opts||{};
+  let x=null; try{ x=await dbGet('inspections',id); }catch(e){ logErr('open',e); }
+  if(!x){ toast('That inspection couldn’t be found.'); return; }
+  cur=normalizeInsp(x); openRid=null;
+  $('libView').hidden=true; $('inspView').hidden=false;
+  renderInspection();
+  if(opts.room&&findRoom(opts.room)) setOpenRoom(opts.room,false);
+  if(!opts.noHistory){ try{ history.pushState({pa:'insp'},''); }catch(e){} }
+  window.scrollTo(0,opts.scroll||0);
+  if(opts.room&&findRoom(opts.room)) setTimeout(()=>scrollToRoom(opts.room),60);
+  persistUI();
+}
+function renderInspection(){
+  updateTitle();
+  const d=cur.details;
+  ['address','unit','inspector','tenant','movein','moveout','rent','deposit','gennotes'].forEach(f=>{ const el=$('f_'+f); if(el) el.value=d[f]||''; });
+  $('detailsCard').classList.toggle('collapsed',!!(d.address||'').trim());
+  $('notesCard').classList.toggle('collapsed',false);
+  renderDetailsSum(); renderStageBar(); renderRooms(); renderDeductions(); renderSigs(); renderNotesSum();
+  setSaveStatus('saved');
+}
+function updateTitle(){ $('inspTitle').textContent=inspTitle(cur); }
+function renderDetailsSum(){ const d=cur.details; $('detailsSum').textContent=[d.tenant,d.movein?'In '+fmtYMD(d.movein):''].filter(Boolean).join(' · '); }
+function renderNotesSum(){ const g=(cur.details.gennotes||'').trim(); $('notesSum').textContent=g?g.slice(0,40):''; }
+function renderStageBar(){
+  STAGES.forEach(st=>{
+    const b=document.querySelector('.st[data-stage="'+st+'"]'); b.classList.toggle('on',cur.stage===st);
+    const pr=stageProgress(cur,st);
+    $('stp_'+st).textContent= st==='afterrepairs' ? (countStage(cur,st)?photoCountText(countStage(cur,st)):'when deducting') : (pr.total?pr.done+'/'+pr.total+' rooms':'—');
+  });
+  updateProgress();
+}
+function updateProgress(){
+  if(!cur) return;
+  const bar=$('progBar'); bar.className='progress-bar '+cur.stage;
+  const pr=stageProgress(cur,cur.stage);
+  bar.style.width=(cur.stage!=='afterrepairs'&&pr.total)?Math.round(pr.done/pr.total*100)+'%':'0%';
+  STAGES.forEach(st=>{ const pr2=stageProgress(cur,st); const el=$('stp_'+st); if(el) el.textContent= st==='afterrepairs' ? (countStage(cur,st)?photoCountText(countStage(cur,st)):'when deducting') : (pr2.total?pr2.done+'/'+pr2.total+' rooms':'—'); });
+  $('roomCount').textContent=cur.areas.length?'('+cur.areas.length+')':'';
+}
+function setStage(st){
+  if(!cur||STAGES.indexOf(st)<0||cur.stage===st) return;
+  stopDictation();
+  cur.stage=st; queueSave(0);
+  renderStageBar();
+  cur.areas.forEach(fillRoomHeader); loadThumbImgs($('rooms'));
+  if(openRid) setOpenRoom(openRid,false);
+  renderDeductions();
+  toast(STAGE_NAME[st]+' photos — '+(st==='movein'?'before or at the start of the tenancy':st==='moveout'?'after the tenant leaves, before repairs or cleaning':'after repairs/cleaning you’re deducting for'),null,null,2600);
+}
+
+/* ---------- rooms ---------- */
+function roomHeadHTML(r){
+  const st=cur.stage, sd=r[st], n=sd.photos.length, done=n>0;
+  let pid=null; for(const s of [st].concat(STAGES)){ if(r[s].photos.length){ pid=r[s].photos[0].id; break; } }
+  const bits=[];
+  if(r.tag) bits.push('<span class="t '+r.tag+'">'+esc(tagLabel(r.tag))+(hasCharge(r)?' '+esc(fmtMoney(parseMoney(r.charge))):'')+'</span>');
+  if(sd.cond) bits.push(esc(condLabel(sd.cond)));
+  if(sd.note) bits.push(esc(sd.note.slice(0,70)));
+  if(!bits.length) bits.push(done?photoCountText(n):'Tap to add '+STAGE_NAME[st].toLowerCase()+' photos');
+  const mi=r.movein.photos.length, mo=r.moveout.photos.length, ar=r.afterrepairs.photos.length;
+  return '<span class="rc '+(done?'done '+st:'')+'">'+(done?'✓':'')+'</span>'+
+    (pid?'<img class="rmini" data-pid="'+esc(pid)+'" alt="">':'<span class="rmini">📷</span>')+
+    '<span class="rname"><b>'+esc(roomTitle(r))+'</b><small>'+bits.join(' · ')+'</small></span>'+
+    '<span class="rcounts">'+(mi?'<span class="cnt mi">'+mi+'</span>':'')+(mo?'<span class="cnt mo">'+mo+'</span>':'')+(ar?'<span class="cnt ar">'+ar+'</span>':'')+'</span>'+
+    '<span class="chev">›</span>';
+}
+function renderRooms(){
+  const root=$('rooms');
+  if(!cur.areas.length){
+    const n=(settings.rooms||[]).length;
+    root.innerHTML='<div class="card"><div class="empty">No rooms yet — start with your standard walkthrough list or add rooms one at a time.<div class="btns"><button class="primary" data-act="std">📋 Add standard room list ('+n+')</button><button class="secondary" data-act="add">＋ Add one room</button></div></div></div>';
+    updateProgress(); return;
+  }
+  root.innerHTML=cur.areas.map(r=>'<div class="room" id="room_'+r.id+'" data-rid="'+r.id+'"><button class="room-h" data-act="toggle" aria-expanded="false">'+roomHeadHTML(r)+'</button><div class="room-b"></div></div>').join('');
+  loadThumbImgs(root);
+  if(openRid&&findRoom(openRid)) setOpenRoom(openRid,false); else openRid=null;
+  updateProgress();
+}
+function fillRoomHeader(r){
+  const el=$('room_'+r.id); if(!el) return;
+  const h=el.querySelector('.room-h'); h.innerHTML=roomHeadHTML(r); loadThumbImgs(h);
+}
+function segHTML(list,val,act){ return list.map(o=>'<button type="button" class="'+o[0]+(val===o[0]?' on':'')+'" data-act="'+act+'" data-v="'+o[0]+'">'+o[1]+'</button>').join(''); }
+function thumbsHTML(r,st,small){
+  const ph=r[st].photos;
+  let h=ph.map((p,i)=>{ const u=thumbCache.get(p.id);
+    return '<button type="button" class="thumb" data-act="thumb" data-stage="'+st+'" data-pid="'+esc(p.id)+'" aria-label="Photo '+(i+1)+'"><img data-pid="'+esc(p.id)+'" alt=""'+(u?' src="'+u+'"':'')+'>'+
+      (i===0&&!small&&ph.length>1?'<span class="mainb">MAIN</span>':'')+(p.cap?'<span class="capb">✎</span>':'')+
+      '<span class="ts">'+esc(fmtStamp(p.ts).replace(/\/\d{4}/,''))+'</span></button>'; }).join('');
+  const pend=pending.get(r.id+':'+st)||0;
+  for(let i=0;i<pend;i++) h+='<div class="thumb pending"><span class="spin"></span></div>';
+  if(!ph.length&&!pend&&!small) h='<div class="nophotos">No '+STAGE_NAME[st].toLowerCase()+' photos yet.</div>';
+  return h;
+}
+function compareHTML(r){
+  const st=cur.stage;
+  return STAGES.filter(s=>s!==st&&(r[s].photos.length||r[s].note||r[s].cond)).map(s=>{ const sd=r[s];
+    return '<details class="cmp '+s+'"'+(st!=='movein'&&s==='movein'?' open':'')+'><summary>'+STAGE_LONG[s]+' · '+photoCountText(sd.photos.length)+(sd.cond?' · '+condLabel(sd.cond):'')+(st!=='movein'&&s==='movein'?' (match these angles)':'')+'</summary>'+
+      '<div class="thumbs sm" data-part="cmp" data-stage="'+s+'">'+thumbsHTML(r,s,true)+'</div>'+(sd.note?'<div class="cmp-note">'+esc(sd.note)+'</div>':'')+'</details>'; }).join('');
+}
+function roomBodyHTML(r){
+  const st=cur.stage, sd=r[st], i=cur.areas.indexOf(r), next=cur.areas[i+1], cmp=compareHTML(r);
+  const opts=AREA_OPTIONS.indexOf(r.area)>=0?AREA_OPTIONS:[r.area].concat(AREA_OPTIONS);
+  return '<div class="rb-top"><select data-act="area" aria-label="Room or area">'+opts.map(o=>'<option'+(o===r.area?' selected':'')+'>'+esc(o)+'</option>').join('')+'</select><button class="iconbtn" data-act="roommenu" aria-label="Room options">⋯</button></div>'+
+    '<input type="text" data-act="custom" value="'+esc(r.custom)+'" placeholder="Label (optional) — e.g. Hall bath, NE bedroom" autocomplete="off">'+
+    '<div class="rb-grid'+(cmp?'':' noside')+'"><div class="rb-main">'+
+    '<div class="sblock '+st+'">'+
+      '<div class="sb-h"><span>'+STAGE_LONG[st]+'</span><span class="sb-c" data-part="count">'+photoCountText(sd.photos.length)+'</span></div>'+
+      '<div class="thumbs" data-part="thumbs">'+thumbsHTML(r,st,false)+'</div>'+
+      '<div class="photobtns">'+
+        '<label class="pbtn primary"><span class="ic">📷</span>Photo<input class="vh" type="file" accept="image/*" capture="environment" data-act="file-cam" tabindex="-1"></label>'+
+        '<button type="button" class="pbtn" data-act="quick"><span class="ic">⚡</span>Quick Shoot</button>'+
+        '<label class="pbtn"><span class="ic">🖼</span>Library<input class="vh" type="file" accept="image/*" multiple data-act="file-lib" tabindex="-1"></label>'+
+      '</div>'+
+      '<div class="fh">Condition</div><div class="seg" data-part="cond">'+segHTML(CONDS,sd.cond,'cond')+'</div>'+
+      '<div class="fh"><span>Comments</span>'+(SpeechRec?'<button type="button" class="mic" data-act="dictate">🎤 Dictate</button>':'')+'</div>'+
+      '<textarea data-act="note" placeholder="Describe the condition — or tap the 🎤 on the keyboard to dictate">'+esc(sd.note)+'</textarea>'+
+      '<div class="phrases">'+(settings.phrases||[]).map(p=>'<button type="button" data-act="phrase" data-v="'+esc(p)+'">＋ '+esc(p)+'</button>').join('')+'</div>'+
+      (st==='moveout'?'<div class="fh">Move-out result</div><div class="seg" data-part="tag">'+segHTML(TAGS,r.tag,'tag')+'</div>'+
+        '<div class="charge" data-part="charge"'+(r.tag==='damage'||r.tag==='cleaning'?'':' hidden')+'><span>Estimated charge</span><input type="text" inputmode="decimal" data-act="charge" value="'+esc(r.charge)+'" placeholder="$0.00" autocomplete="off"></div>':'')+
+    '</div></div>'+(cmp?'<div class="rb-side">'+cmp+'</div>':'')+'</div>'+
+    '<button type="button" class="nextbtn" data-act="next">'+(next?'Next room: '+esc(roomTitle(next))+' ›':'✓ Last room — done')+'</button>';
+}
+function setOpenRoom(rid,scroll){
+  if(openRid&&openRid!==rid){ const old=$('room_'+openRid); if(old){ old.classList.remove('open'); old.querySelector('.room-h').setAttribute('aria-expanded','false'); old.querySelector('.room-b').innerHTML=''; } stopDictation(); }
+  openRid=rid||null;
+  if(openRid){
+    const el=$('room_'+openRid), r=findRoom(openRid);
+    if(el&&r){ el.classList.add('open'); el.querySelector('.room-h').setAttribute('aria-expanded','true'); const b=el.querySelector('.room-b'); b.innerHTML=roomBodyHTML(r); loadThumbImgs(b); if(scroll) scrollToRoom(openRid); }
+  }
+  persistUI();
+}
+function toggleRoom(rid){ if(openRid===rid){ const el=$('room_'+rid); setOpenRoom(null); if(el) scrollToEl(el); } else setOpenRoom(rid,true); }
+function topOffset(){ const t=$('inspTop'); return t?t.getBoundingClientRect().height:0; }
+function scrollToEl(el){ const y=el.getBoundingClientRect().top+window.pageYOffset-topOffset()-8; window.scrollTo({top:Math.max(0,y),behavior:'smooth'}); }
+function scrollToRoom(rid){ const el=$('room_'+rid); if(el) scrollToEl(el); }
+function refreshOpenRoom(r){
+  if(openRid!==r.id) return; const el=$('room_'+r.id); if(!el) return; const b=el.querySelector('.room-b'); const st=cur.stage, sd=r[st];
+  const t=b.querySelector('[data-part=thumbs]'); if(t){ t.innerHTML=thumbsHTML(r,st,false); loadThumbImgs(t); }
+  const c=b.querySelector('[data-part=count]'); if(c) c.textContent=photoCountText(sd.photos.length);
+  const cd=b.querySelector('[data-part=cond]'); if(cd) cd.innerHTML=segHTML(CONDS,sd.cond,'cond');
+  const tg=b.querySelector('[data-part=tag]'); if(tg) tg.innerHTML=segHTML(TAGS,r.tag,'tag');
+  const ch=b.querySelector('[data-part=charge]'); if(ch) ch.hidden=!(r.tag==='damage'||r.tag==='cleaning');
+  Array.prototype.forEach.call(b.querySelectorAll('[data-part=cmp]'),x=>{ x.innerHTML=thumbsHTML(r,x.dataset.stage,true); loadThumbImgs(x); });
+}
+function refreshRoom(r){ if(!cur||cur.areas.indexOf(r)<0) return; fillRoomHeader(r); refreshOpenRoom(r); updateProgress(); }
+function nextRoom(rid){
+  const i=cur.areas.findIndex(r=>r.id===rid), n=cur.areas[i+1];
+  if(n){ setOpenRoom(n.id,true); return; }
+  setOpenRoom(null);
+  const pr=stageProgress(cur,cur.stage);
+  toast(cur.stage==='afterrepairs'?'Last room.':(pr.done===pr.total?'All '+pr.total+' rooms have '+STAGE_NAME[cur.stage].toLowerCase()+' photos ✓':(pr.total-pr.done)+' room'+(pr.total-pr.done>1?'s':'')+' still need '+STAGE_NAME[cur.stage].toLowerCase()+' photos'));
+  scrollToEl($('notesCard'));
+}
+function addRoom(){
+  const have=new Set(cur.areas.map(r=>r.area));
+  const name=(settings.rooms||DEFAULT_ROOMS).find(n=>!have.has(n))||'Other';
+  const r=blankRoom(name); cur.areas.push(r); changed(0);
+  renderRooms(); setOpenRoom(r.id,true);
+}
+function addStandardRooms(){
+  const have=new Set(cur.areas.map(r=>r.area));
+  const missing=(settings.rooms||DEFAULT_ROOMS).filter(n=>!have.has(n));
+  if(!missing.length){ toast('All standard rooms are already in the list.'); return; }
+  missing.forEach(n=>cur.areas.push(blankRoom(n))); changed(0);
+  renderRooms(); renderStageBar();
+  toast('Added '+missing.length+' rooms — tap a room to start');
+}
+function roomMenu(r){
+  const i=cur.areas.indexOf(r);
+  menuSheet(roomTitle(r),[
+    {icon:'⬆️',label:'Move up',onClick:()=>{ if(i>0){ cur.areas.splice(i,1); cur.areas.splice(i-1,0,r); changed(0); renderRooms(); scrollToRoom(r.id); } }},
+    {icon:'⬇️',label:'Move down',onClick:()=>{ if(i<cur.areas.length-1){ cur.areas.splice(i,1); cur.areas.splice(i+1,0,r); changed(0); renderRooms(); scrollToRoom(r.id); } }},
+    {icon:'➕',label:'Add another '+r.area,sub:'Same type of room, no photos',onClick:()=>{ const n=blankRoom(r.area,''); cur.areas.splice(i+1,0,n); changed(0); renderRooms(); setOpenRoom(n.id,true); }},
+    {sep:true},
+    {icon:'🗑',label:'Delete this room',danger:true,onClick:()=>deleteRoom(r)}
+  ]);
+}
+function deleteRoom(r){
+  const insp=cur, i=insp.areas.indexOf(r); if(i<0) return;
+  insp.areas.splice(i,1); if(openRid===r.id) openRid=null; changed(0); renderRooms(); renderStageBar(); renderDeductions();
+  const ids=[]; STAGES.forEach(st=>r[st].photos.forEach(p=>ids.push(p.id)));
+  toast('Deleted “'+roomTitle(r)+'”'+(ids.length?' and '+photoCountText(ids.length):''),'Undo',()=>{
+    insp.areas.splice(Math.min(i,insp.areas.length),0,r); insp.updated=Date.now();
+    if(cur===insp){ queueSave(0); renderRooms(); renderStageBar(); renderDeductions(); } else dbWrite([{s:'inspections',v:insp}]).catch(()=>{});
+  },6500,()=>dropPhotoBytes(ids));
+}
+function addPhrase(r,ph){
+  const st=cur.stage, sd=r[st]; const t=(sd.note||'').trim();
+  sd.note=t?(t.replace(/[.,;]\s*$/,'')+', '+ph.charAt(0).toLowerCase()+ph.slice(1)):ph;
+  const ta=document.querySelector('#room_'+r.id+' textarea[data-act=note]'); if(ta) ta.value=sd.note;
+  changed(); fillRoomHeader(r);
+}
+
+/* ---------- details / notes / worksheet / signatures ---------- */
+function renderDeductions(){
+  const card=$('dedCard'); const show=cur.stage!=='movein'||cur.areas.some(r=>r.tag);
+  card.hidden=!show; if(!show) return;
+  const items=cur.areas.filter(r=>r.tag==='damage'||r.tag==='cleaning');
+  const tot=sumCharges(cur), dep=parseMoney(cur.details.deposit);
+  let h='';
+  if(!items.length) h='<div class="hint" style="margin-top:4px">At move-out, mark each room <b>Normal wear</b>, <b>Cleaning</b> or <b>Damage</b>. Rooms marked Cleaning or Damage — with an estimated charge — total up here and print as a deduction worksheet.</div>';
+  else h=items.map(r=>'<div class="ded-row"><span>'+esc(roomTitle(r))+' <span class="t '+r.tag+'">'+esc(tagLabel(r.tag))+'</span></span><span>'+(parseMoney(r.charge)>0?esc(fmtMoney(parseMoney(r.charge))):'<span style="color:var(--muted)">no amount</span>')+'</span></div>').join('')+
+    '<div class="ded-row tot"><span>Total deductions</span><span>'+fmtMoney(tot)+'</span></div>'+
+    (dep?'<div class="ded-row"><span>Security deposit</span><span>'+fmtMoney(dep)+'</span></div><div class="ded-row tot"><span>Balance to return</span><span>'+fmtMoney(dep-tot)+'</span></div>':'<div class="hint">Enter the security deposit under Property &amp; Tenant to see the balance.</div>');
+  $('dedBody').innerHTML=h;
+  $('dedSum').textContent=tot?fmtMoney(tot):'';
+}
+function renderSigs(){
+  const s=cur.signatures||[];
+  $('sigList').innerHTML=s.length?s.map(x=>'<div class="sigitem" data-sid="'+esc(x.id)+'"><img src="'+esc(x.data)+'" alt=""><div><b>'+esc(x.name||roleLabel(x.role))+'</b><small>'+esc(roleLabel(x.role))+' · '+STAGE_NAME[x.stage]+' · '+esc(fmtStamp(x.ts))+'</small></div><button type="button" class="iconbtn danger" data-act="sigdel" aria-label="Remove signature">🗑</button></div>').join(''):'<div class="hint" style="margin-top:2px">No signatures yet. Have the tenant sign at the end of the walkthrough.</div>';
+  $('sigSum').textContent=s.length?(s.length+' signed'):'';
+}
+function deleteSig(id){
+  const insp=cur, i=insp.signatures.findIndex(s=>s.id===id); if(i<0) return;
+  const [s]=insp.signatures.splice(i,1); changed(0); renderSigs();
+  toast('Signature removed','Undo',()=>{ insp.signatures.splice(i,0,s); insp.updated=Date.now(); if(cur===insp){ queueSave(0); renderSigs(); } else dbWrite([{s:'inspections',v:insp}]).catch(()=>{}); },6000);
+}
+
+/* ============================== DICTATION (optional) ============================== */
+let rec=null, recBtn=null;
+function stopDictation(){ if(rec){ try{ rec.stop(); }catch(e){} rec=null; } if(recBtn){ recBtn.classList.remove('rec'); recBtn.textContent='🎤 Dictate'; recBtn=null; } }
+function dictate(btn,r){
+  if(!SpeechRec) return;
+  if(rec){ const same=recBtn===btn; stopDictation(); if(same) return; }
+  const ta=btn.closest('.sblock').querySelector('textarea'); const st=cur.stage;
+  let r0; try{ r0=new SpeechRec(); }catch(e){ toast('Dictation isn’t available — tap the comment box and use the 🎤 on the keyboard.'); return; }
+  r0.lang='en-US'; r0.interimResults=true; r0.continuous=true;
+  const base=ta.value?ta.value.replace(/\s+$/,'')+' ':'';
+  r0.onresult=e=>{ let txt=''; for(let i=0;i<e.results.length;i++) txt+=e.results[i][0].transcript; ta.value=base+txt; r[st].note=ta.value; changed(); };
+  r0.onerror=e=>{ const err=e&&e.error; stopDictation(); if(err&&err!=='aborted'&&err!=='no-speech') toast('Dictation stopped ('+err+'). Tip: tap the comment box and use the 🎤 on the keyboard.'); };
+  r0.onend=()=>{ if(rec===r0) stopDictation(); fillRoomHeader(r); };
+  try{ r0.start(); rec=r0; recBtn=btn; btn.classList.add('rec'); btn.textContent='■ Stop'; }catch(e){ toast('Dictation isn’t available here — use the 🎤 on the keyboard.'); }
+}
+
+/* ============================== PHOTO VIEWER ============================== */
+const vw={insp:null,rid:null,stage:null,idx:0,url:null};
+function openViewer(rid,stage,pid){
+  const r=findRoom(rid); if(!r) return; const ph=r[stage].photos; const i=ph.findIndex(p=>p.id===pid);
+  vw.insp=cur; vw.rid=rid; vw.stage=stage; vw.idx=Math.max(0,i);
+  $('viewer').hidden=false; document.body.classList.add('noscroll'); $('vStage').classList.remove('zoom');
+  showViewerPhoto();
+}
+async function showViewerPhoto(){
+  const r=findRoom(vw.rid,vw.insp); if(!r){ closeViewer(); return; }
+  const ph=r[vw.stage].photos; if(!ph.length){ closeViewer(); return; }
+  vw.idx=Math.max(0,Math.min(vw.idx,ph.length-1)); const p=ph[vw.idx];
+  $('vTitle').textContent=roomTitle(r)+' · '+STAGE_NAME[vw.stage];
+  $('vIdx').textContent=(vw.idx+1)+' / '+ph.length;
+  $('vMeta').textContent=fmtStamp(p.ts)+(p.dateSrc==='exif'?' · date taken':p.src==='quick'?' · Quick Shoot':p.src==='v3'?' · from previous version':'')+(p.stamped?' · stamped':'');
+  $('vCap').value=p.cap||'';
+  $('vMain').disabled=vw.idx===0; $('vMain').textContent=vw.idx===0?'★ Main photo':'★ Make main';
+  $('vPrev').disabled=vw.idx===0; $('vNext').disabled=vw.idx===ph.length-1;
+  $('vStage').classList.remove('zoom');
+  const img=$('vImg'); const tu=thumbCache.get(p.id); if(tu) img.src=tu;
+  const want=p.id;
+  try{ const ab=await dbGet('full',p.id); const r2=findRoom(vw.rid,vw.insp); const p2=r2&&r2[vw.stage].photos[vw.idx];
+    if(ab&&p2&&p2.id===want&&!$('viewer').hidden){ if(vw.url) URL.revokeObjectURL(vw.url); vw.url=URL.createObjectURL(jpegBlob(ab)); img.src=vw.url; } }
+  catch(e){ logErr('viewer',e); }
+}
+function closeViewer(){
+  if($('viewer').hidden) return;
+  $('viewer').hidden=true; document.body.classList.remove('noscroll');
+  if(vw.url){ URL.revokeObjectURL(vw.url); vw.url=null; } $('vImg').removeAttribute('src');
+  const r=findRoom(vw.rid,vw.insp); if(r&&cur===vw.insp) refreshRoom(r);
+}
+function viewerStep(d){ const r=findRoom(vw.rid,vw.insp); if(!r) return; const n=r[vw.stage].photos.length; const j=vw.idx+d; if(j<0||j>=n) return; vw.idx=j; showViewerPhoto(); }
+function viewerMakeMain(){ const r=findRoom(vw.rid,vw.insp); if(!r||vw.idx===0) return; const ph=r[vw.stage].photos; const [p]=ph.splice(vw.idx,1); ph.unshift(p); vw.idx=0; vw.insp.updated=Date.now(); if(cur===vw.insp) queueSave(0); showViewerPhoto(); toast('Main photo set — it prints large in the report'); }
+function viewerDelete(){
+  const insp=vw.insp, r=findRoom(vw.rid,insp); if(!r) return; const st=vw.stage, ph=r[st].photos, i=vw.idx; const p=ph[i]; if(!p) return;
+  ph.splice(i,1); insp.updated=Date.now(); if(cur===insp) queueSave(0); else dbWrite([{s:'inspections',v:insp}]).catch(()=>{});
+  if(!ph.length) closeViewer(); else showViewerPhoto();
+  if(cur===insp) refreshRoom(r);
+  toast('Photo deleted','Undo',()=>{ ph.splice(Math.min(i,ph.length),0,p); insp.updated=Date.now(); if(cur===insp){ queueSave(0); refreshRoom(r); } else dbWrite([{s:'inspections',v:insp}]).catch(()=>{}); if(!$('viewer').hidden&&vw.rid===r.id&&vw.stage===st){ vw.idx=i; showViewerPhoto(); } },6500,()=>dropPhotoBytes([p.id]));
+}
+(function viewerGestures(){
+  const stage=$('vStage'); let sx=0,sy=0,t0=0,lastTap=0,multi=false;
+  stage.addEventListener('touchstart',e=>{ multi=e.touches.length>1; const t=e.touches[0]; sx=t.clientX; sy=t.clientY; t0=Date.now(); },{passive:true});
+  stage.addEventListener('touchend',e=>{
+    if(multi) return; const t=e.changedTouches[0]; const dx=t.clientX-sx, dy=t.clientY-sy, dt=Date.now()-t0;
+    if(!stage.classList.contains('zoom')&&Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.4&&dt<600){ viewerStep(dx<0?1:-1); lastTap=0; return; }
+    if(Math.abs(dx)<10&&Math.abs(dy)<10&&dt<300){ const now=Date.now(); if(now-lastTap<320){ toggleZoom(t.clientX,t.clientY); lastTap=0; e.preventDefault(); } else lastTap=now; }
+  });
+  stage.addEventListener('dblclick',e=>toggleZoom(e.clientX,e.clientY));
+  function toggleZoom(cx,cy){
+    const on=!stage.classList.contains('zoom');
+    const img=$('vImg'); const ir=img.getBoundingClientRect(); const fx=ir.width?(cx-ir.left)/ir.width:.5, fy=ir.height?(cy-ir.top)/ir.height:.5;
+    stage.classList.toggle('zoom',on);
+    if(on) requestAnimationFrame(()=>{ stage.scrollLeft=img.offsetWidth*fx-stage.clientWidth/2; stage.scrollTop=img.offsetHeight*fy-stage.clientHeight/2; });
+  }
+})();
+
+/* ============================== QUICK SHOOT CAMERA ============================== */
+const cam={stream:null,track:null,insp:null,rid:null,stage:null,queue:Promise.resolve(),pend:0,count:0,torch:false,open:false};
+function openCamera(rid){
+  if(!cur||!cur.areas.length){ toast('Add a room first.'); return; }
+  stopDictation();
+  cam.insp=cur; cam.rid=findRoom(rid)?rid:cur.areas[0].id; cam.stage=cur.stage; cam.count=0; cam.open=true; cam.torch=false;
+  $('cam').hidden=false; document.body.classList.add('noscroll');
+  $('camStage').textContent=STAGE_NAME[cam.stage].toUpperCase(); $('camStage').className='camstage '+cam.stage;
+  $('camLast').style.backgroundImage=''; $('camLast').textContent='';
+  updateCamRoom(); updateCamCount(); startStream();
+}
+async function startStream(){
+  stopStream(); $('camErr').hidden=true;
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) throw new Error('This browser doesn’t allow in-app camera access.');
+    const s=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1440}}});
+    if(!cam.open){ s.getTracks().forEach(t=>t.stop()); return; }
+    cam.stream=s; cam.track=s.getVideoTracks()[0];
+    const v=$('camVideo'); v.srcObject=s; v.muted=true; v.setAttribute('playsinline',''); try{ await v.play(); }catch(e){}
+    let caps={}; try{ caps=cam.track.getCapabilities?cam.track.getCapabilities():{}; }catch(e){}
+    $('camTorch').hidden=!caps.torch; $('camTorchSp').hidden=!!caps.torch;
+  }catch(e){
+    logErr('camera',e);
+    const denied=e&&(e.name==='NotAllowedError'||e.name==='SecurityError');
+    $('camErr').innerHTML='<div style="font-weight:800;font-size:16px;margin-bottom:6px">'+(denied?'Camera access is turned off':'Quick Shoot camera unavailable')+'</div><div style="opacity:.85">'+(denied?'Allow camera access for this app when asked (or in the Settings app), or use the regular camera instead.':esc(e.message||String(e)))+'</div><button class="primary wide" id="camFallback">📷 Use the '+DEV+' camera instead</button>';
+    $('camErr').hidden=false;
+    $('camFallback').onclick=()=>{ const rid=cam.rid; closeCamera(); setOpenRoom(rid,true); const inp=document.querySelector('#room_'+rid+' input[data-act=file-cam]'); if(inp) inp.click(); };
+  }
+}
+function stopStream(){ if(cam.stream){ cam.stream.getTracks().forEach(t=>{ try{ t.stop(); }catch(e){} }); } cam.stream=null; cam.track=null; const v=$('camVideo'); if(v) v.srcObject=null; }
+function closeCamera(){
+  if(!cam.open) return; cam.open=false; stopStream();
+  $('cam').hidden=true; document.body.classList.remove('noscroll');
+  if(cur===cam.insp&&cam.rid){ renderStageBar(); if(openRid!==cam.rid) setOpenRoom(cam.rid,true); else { const r=findRoom(cam.rid); if(r) refreshRoom(r); } }
+}
+function updateCamRoom(){ const r=findRoom(cam.rid,cam.insp); if(!r) return; const i=cam.insp.areas.indexOf(r); $('camRoom').innerHTML=esc(roomTitle(r))+'<small>Room '+(i+1)+' of '+cam.insp.areas.length+' · '+photoCountText(r[cam.stage].photos.length)+'</small>'; $('camPrev').disabled=i===0; $('camNext').disabled=i===cam.insp.areas.length-1; }
+function updateCamCount(){ $('camCount').innerHTML=(cam.count?cam.count+' saved':'')+(cam.pend?'<br><span style="opacity:.8">saving '+cam.pend+'…</span>':''); }
+function camStep(d){ const a=cam.insp.areas; const i=a.findIndex(r=>r.id===cam.rid)+d; if(i<0||i>=a.length) return; cam.rid=a[i].id; updateCamRoom(); }
+function shutter(){
+  const v=$('camVideo'); if(!cam.stream||!v.videoWidth){ toast('Camera is still starting…'); return; }
+  if(cam.pend>=4){ toast('Saving photos — one moment…'); return; }
+  const vw0=v.videoWidth, vh0=v.videoHeight; const max=PHOTO_MAX[settings.quality]||1600; const r0=Math.min(1,max/Math.max(vw0,vh0));
+  const grab=grabFrame(v,Math.round(vw0*r0),Math.round(vh0*r0)); // first draw happens right now, at the tap
+  const f=$('camFlash'); f.classList.add('on'); setTimeout(()=>f.classList.remove('on'),60);
+  const ts=Date.now(), insp=cam.insp, rid=cam.rid, st=cam.stage;
+  cam.pend++; updateCamCount();
+  cam.queue=cam.queue.then(async()=>{
+    let c=null;
+    try{ const r=findRoom(rid,insp); if(!r) throw new Error('Room was deleted');
+      c=await grab; if(!c){ toast('That shot came out black — tap the shutter again.',null,null,3500); return; }
+      const p=await makePhoto(c,c.width,c.height,{ts:ts,stage:st,src:'quick',dateSrc:'now',insp:insp});
+      await commitPhoto(insp,r,st,p); cam.count++;
+      const u=thumbCache.get(p.meta.id); if(u&&cam.open){ $('camLast').style.backgroundImage='url("'+u+'")'; }
+      if(cam.open&&cam.rid===rid) updateCamRoom();
+      if(cur===insp) refreshRoom(r);
+    }catch(e){ logErr('quick',e); toast('Photo not saved: '+e.message,null,null,5000); }
+    finally{ if(c){ c.width=c.height=1; } cam.pend--; updateCamCount(); }
+  });
+}
+// A camera frame grabbed at the wrong instant can be solid black — check and re-grab (up to 3 tries).
+function frameIsBlank(c){ try{ const s=document.createElement('canvas'); s.width=16; s.height=12; const g=s.getContext('2d'); g.drawImage(c,0,0,16,12); const d=g.getImageData(0,0,16,12).data; let mx=0; for(let i=0;i<d.length;i+=4){ if(d[i]>mx) mx=d[i]; if(d[i+1]>mx) mx=d[i+1]; if(d[i+2]>mx) mx=d[i+2]; } s.width=s.height=1; return mx<8; }catch(e){ return false; } }
+async function grabFrame(v,w,h){
+  const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d');
+  for(let a=0;a<3;a++){ g.drawImage(v,0,0,w,h); if(!frameIsBlank(c)) return c; await sleep(90); }
+  c.width=c.height=1; return null;
+}
+async function toggleTorch(){ if(!cam.track) return; try{ await cam.track.applyConstraints({advanced:[{torch:!cam.torch}]}); cam.torch=!cam.torch; $('camTorch').style.background=cam.torch?'rgba(255,214,0,.85)':''; }catch(e){ toast('Flashlight not available'); } }
+
+/* ============================== SIGNATURE PAD ============================== */
+const sig={role:'tenant',stage:'movein',ctx:null,dpr:1,w:0,h:0,drawing:false,dirty:false,minX:0,minY:0,maxX:0,maxY:0,last:null,mid:null};
+function openSigPad(role){
+  sig.role=role; sig.stage=cur.stage==='movein'?'movein':'moveout';
+  $('sigTitle').textContent=role==='agent'?'Landlord / Agent signature':'Tenant signature';
+  $('sigName').value=role==='agent'?(cur.details.inspector||settings.inspector||''):(cur.details.tenant||'');
+  $('sigAck').textContent='“'+ACK_TEXT+'”';
+  setSigStage(sig.stage);
+  $('sigPad').hidden=false; document.body.classList.add('noscroll');
+  requestAnimationFrame(initSigCanvas);
+}
+function setSigStage(st){ sig.stage=st; Array.prototype.forEach.call($('sigStageSeg').children,b=>{ b.className=(b.dataset.v===st?'on ':'')+(st==='movein'?'good':'poor'); }); }
+function initSigCanvas(){
+  const cv=$('sigCanvas'), wrap=$('sigWrap');
+  const w=wrap.clientWidth; const avail=window.innerHeight-wrap.getBoundingClientRect().top-100;
+  const h=Math.max(150,Math.min(Math.round(w*(w>700?0.42:0.5)),avail,w>700?420:320));
+  sig.dpr=Math.min(window.devicePixelRatio||1,3); sig.w=w; sig.h=h;
+  cv.style.height=h+'px'; cv.width=Math.round(w*sig.dpr); cv.height=Math.round(h*sig.dpr);
+  const ctx=cv.getContext('2d'); ctx.setTransform(sig.dpr,0,0,sig.dpr,0,0);
+  ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#14202c'; ctx.lineWidth=2.6;
+  sig.ctx=ctx; sig.dirty=false; sig.minX=sig.minY=1e9; sig.maxX=sig.maxY=-1e9; $('sigPh').hidden=false; $('sigSave').disabled=false;
+}
+function sigPos(e){ const r=$('sigCanvas').getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
+function sigBounds(p){ sig.minX=Math.min(sig.minX,p.x); sig.minY=Math.min(sig.minY,p.y); sig.maxX=Math.max(sig.maxX,p.x); sig.maxY=Math.max(sig.maxY,p.y); }
+(function sigEvents(){
+  const cv=$('sigCanvas');
+  cv.addEventListener('pointerdown',e=>{ if(!sig.ctx) return; e.preventDefault(); try{ cv.setPointerCapture(e.pointerId); }catch(_){} sig.drawing=true; const p=sigPos(e); sig.last=p; sig.mid=p; sigBounds(p);
+    const c=sig.ctx; c.beginPath(); c.arc(p.x,p.y,1.3,0,Math.PI*2); c.fillStyle='#14202c'; c.fill(); sig.dirty=true; $('sigPh').hidden=true; });
+  cv.addEventListener('pointermove',e=>{ if(!sig.drawing) return; e.preventDefault();
+    const evs=(e.getCoalescedEvents&&e.getCoalescedEvents().length)?e.getCoalescedEvents():[e];
+    const c=sig.ctx;
+    evs.forEach(ev=>{ const p=sigPos(ev); const mid={x:(sig.last.x+p.x)/2,y:(sig.last.y+p.y)/2};
+      c.beginPath(); c.moveTo(sig.mid.x,sig.mid.y); c.quadraticCurveTo(sig.last.x,sig.last.y,mid.x,mid.y); c.stroke();
+      sig.last=p; sig.mid=mid; sigBounds(p); }); });
+  const end=e=>{ if(!sig.drawing) return; sig.drawing=false; if(sig.last&&sig.mid){ const c=sig.ctx; c.beginPath(); c.moveTo(sig.mid.x,sig.mid.y); c.lineTo(sig.last.x,sig.last.y); c.stroke(); } };
+  cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end); cv.addEventListener('lostpointercapture',end);
+  cv.addEventListener('touchmove',e=>{ if(e.cancelable) e.preventDefault(); },{passive:false});
+})();
+function saveSig(){
+  if(!sig.dirty){ toast('Please sign in the box first.'); return; }
+  const pad=10; const x0=Math.max(0,sig.minX-pad), y0=Math.max(0,sig.minY-pad), x1=Math.min(sig.w,sig.maxX+pad), y1=Math.min(sig.h,sig.maxY+pad);
+  const sw=Math.max(10,x1-x0), sh=Math.max(10,y1-y0);
+  const out=document.createElement('canvas'); const scale=Math.min(sig.dpr,2);
+  out.width=Math.round(sw*scale); out.height=Math.round(sh*scale);
+  out.getContext('2d').drawImage($('sigCanvas'),x0*sig.dpr,y0*sig.dpr,sw*sig.dpr,sh*sig.dpr,0,0,out.width,out.height);
+  const data=out.toDataURL('image/png'); out.width=out.height=1;
+  cur.signatures.push({id:uid(),role:sig.role,stage:sig.stage,name:($('sigName').value||'').trim(),data:data,ts:Date.now()});
+  changed(0); renderSigs(); closeSigPad(); toast('Signature saved ✓');
+}
+function closeSigPad(){ if($('sigPad').hidden) return; $('sigPad').hidden=true; document.body.classList.remove('noscroll'); sig.ctx=null; sig.drawing=false; }
+
+/* ============================== FILES: SHARE / DOWNLOAD ============================== */
+// Must be called synchronously from a tap — iOS only opens the share sheet during a user gesture.
+function deliverFile(blob,name,type){
+  if(window.__pa&&window.__pa.deliverHook) return Promise.resolve(window.__pa.deliverHook(blob,name,type));
+  let file=null; try{ file=new File([blob],name,{type:type}); }catch(e){}
+  if(file&&navigator.share&&navigator.canShare){
+    let ok=false; try{ ok=navigator.canShare({files:[file]}); }catch(e){}
+    if(ok) return navigator.share({files:[file],title:name}).then(()=>'shared',e=>{ if(e&&e.name==='AbortError') return 'cancelled'; logErr('share',e); return downloadFallback(blob,name); });
+  }
+  return Promise.resolve(downloadFallback(blob,name));
+}
+function downloadFallback(blob,name){
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.rel='noopener';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),120000); return 'downloaded';
+}
+
+/* ============================== BACKUP / RESTORE ============================== */
+// Backup format v4: JSON Lines — header, then {"t":"insp"} and {"t":"photo"} lines. Streams in/out,
+// so even a large library never has to sit in memory as one giant string.
+async function buildBackupBlob(insps,onProg){
+  const parts=[]; let chunk=[];
+  const flush=()=>{ if(chunk.length){ parts.push(new Blob(chunk,{type:'application/json'})); chunk=[]; } };
+  chunk.push(JSON.stringify({format:'photo-addendum-backup',version:4,app:APP_VERSION,created:Date.now(),count:insps.length})+'\n');
+  const total=insps.reduce((n,x)=>n+allPhotos(x).length,0); let done=0;
+  for(const x of insps){
+    chunk.push(JSON.stringify({t:'insp',insp:x})+'\n');
+    for(const p of allPhotos(x)){
+      const b=await dbGetPhoto(p.id);
+      if(b.full) chunk.push(JSON.stringify({t:'photo',iid:x.id,id:p.id,full:abToB64(b.full),thumb:b.thumb?abToB64(b.thumb):''})+'\n');
+      done++; if(onProg) onProg(done,total); if(chunk.length>=12){ flush(); await sleep(0); }
+    }
+  }
+  chunk.push(JSON.stringify({t:'end'})+'\n'); flush();
+  return new Blob(parts,{type:'application/json'});
+}
+async function markBackedUp(ids){
+  const ts=Date.now(); const ops=[];
+  ids.forEach(id=>{ const x=(cur&&cur.id===id)?cur:lib.find(y=>y.id===id); if(x){ x.backupTs=Math.max(ts,x.updated||0); ops.push({s:'inspections',v:x}); } });
+  if(ops.length) await dbWrite(ops).catch(e=>logErr('markBackup',e));
+}
+async function openBackupSheet(ids){
+  if(cur) await flushSave();
+  let insps=[]; try{ insps=(await dbGetMany('inspections',ids)).filter(Boolean).map(normalizeInsp); }catch(e){ toast('Couldn’t read inspections: '+e.message); return; }
+  if(!insps.length){ toast('Nothing to back up yet.'); return; }
+  const n=insps.reduce((s,x)=>s+allPhotos(x).length,0);
+  const title=insps.length===1?'Back up this inspection':'Back up '+insps.length+' inspections';
+  openSheet(title,'<p class="hint" style="font-size:14px;margin-top:2px">Creates one file with '+(insps.length===1?'this inspection':'all '+insps.length+' inspections')+' and '+photoCountText(n)+'. Save it to <b>iCloud Drive</b> (Save to Files) or email it to yourself. To restore: ⋯ → Restore from backup.</p><button class="primary wide" id="bkGo">Create backup file</button><div id="bkOut"></div>',body=>{
+    $('bkGo').onclick=async()=>{
+      $('bkGo').disabled=true; const out=$('bkOut');
+      out.innerHTML='<div class="pbar"><div id="bkBar"></div></div><div class="pmsg" id="bkMsg">Packing photos…</div>';
+      try{
+        const blob=await buildBackupBlob(insps,(i,t)=>{ const b=$('bkBar'); if(b) b.style.width=Math.round(i/Math.max(1,t)*100)+'%'; const m=$('bkMsg'); if(m) m.textContent='Packing photos '+i+' of '+t+'…'; });
+        const name='PhotoAddendum_Backup_'+(insps.length===1?slug(inspTitle(insps[0]))+'_':'All_')+todayYMD()+'.json';
+        if(!$('bkOut')) return;
+        out.innerHTML='<div class="result"><b>✓ Backup ready · '+fmtMB(blob.size)+'</b><p>Tap below, then choose <b>Save to Files</b> (iCloud Drive) or <b>Mail</b>.</p><button class="primary wide" id="bkShare">📤 Save / Share backup</button></div>';
+        $('bkShare').onclick=()=>{ deliverFile(blob,name,'application/json').then(res=>{ if(res==='shared'||res==='downloaded'){ markBackedUp(insps.map(x=>x.id)).then(()=>{ if(!cur){ loadLibrary().then(renderLibrary); } }); closeSheet(); toast('Backed up ✓'); } }); };
+      }catch(e){ logErr('backup',e); if($('bkOut')) out.innerHTML='<div class="result err">Backup failed: '+esc(e.message||e)+'</div>'; $('bkGo').disabled=false; }
+    };
+  });
+}
+function legacyKey(s){ const ids=[]; (s.areas||[]).forEach(a=>STAGES.forEach(st=>((a[st]&&a[st].photos)||[]).forEach(p=>{ if(p&&p.id) ids.push(p.id); }))); return ids.slice(0,4).join('|')+'|'+((s.details&&s.details.address)||''); }
+async function thumbFromFull(ab){ const r=await shrinkJPEG(ab,THUMB_MAX,0.72); return {thumb:r.ab,w:r.ow,h:r.oh}; }
+// Imports a v1/v2/v3 single-project JSON (photos inline as data URLs).
+async function importLegacyProject(s,opts){
+  opts=opts||{};
+  const x=newInspection(); if(opts.fixedId) x.id=opts.fixedId;
+  x.details=Object.assign({address:'',unit:'',inspector:'',tenant:'',movein:'',moveout:'',rent:'',deposit:'',gennotes:''},s.details||{});
+  x.stage=STAGES.indexOf(s.stage)>=0?s.stage:'movein'; x.backupTs=s.backupTs||0; x.legacyKey=legacyKey(s);
+  const jobs=[];
+  x.areas=(s.areas||[]).map(a=>{ const r=blankRoom(a.area||'Other',a.custom||''); r.tag=(a.tag==='wear'||a.tag==='damage')?a.tag:'';
+    STAGES.forEach(st=>{ const sd=a[st]||{}; r[st].note=sd.note||''; (sd.photos||[]).forEach(p=>{ if(!p||!p.data) return;
+      const id=opts.fixedId?('v3_'+(p.id||uid())):uid(); const m={id:id,ts:p.ts||Date.now(),w:p.w||0,h:p.h||0,src:'v3',dateSrc:'v3',stamped:false,cap:''}; r[st].photos.push(m); jobs.push({m:m,data:p.data}); }); });
+    return r; });
+  const sg=s.signatures||{};
+  [['tenantMovein','movein'],['tenantMoveout','moveout']].forEach(k=>{ const v=sg[k[0]]; if(v&&v.data) x.signatures.push({id:uid(),role:'tenant',stage:k[1],name:x.details.tenant||'',data:v.data,ts:v.ts||Date.now()}); });
+  for(let i=0;i<jobs.length;i++){
+    if(opts.onProg) opts.onProg(i,jobs.length);
+    const full=dataURLToAB(jobs[i].data); let thumb=null;
+    try{ const t=await thumbFromFull(full); thumb=t.thumb; if(!jobs[i].m.w){ jobs[i].m.w=t.w; jobs[i].m.h=t.h; } }catch(e){ logErr('legacyThumb',e); thumb=full; }
+    await dbWrite([{s:'full',k:jobs[i].m.id,v:full},{s:'thumb',k:jobs[i].m.id,v:thumb}]);
+    jobs[i].data=null;
+  }
+  if(opts.onProg) opts.onProg(jobs.length,jobs.length);
+  await dbWrite([{s:'inspections',v:x}]);
+  return x;
+}
+async function importBackupLines(file,onProg){
+  const dec=new TextDecoder(); let buf='', pos=0; const CH=1<<21;
+  const existing=new Map(lib.map(x=>[x.id,x]));
+  let dupChoice=null; const imported=[]; let ctx=null, total=0, done=0;
+  async function finish(){ if(!ctx) return; await dbWrite([{s:'inspections',v:ctx.insp}]); if(ctx.replaced) await dropPhotoBytes(ctx.replaced); imported.push(ctx.insp); ctx=null; }
+  async function handle(line){
+    if(!line.trim()) return; const o=JSON.parse(line);
+    if(o.format){ return; }
+    if(o.t==='insp'){
+      await finish();
+      const origId=o.insp&&o.insp.id; // photo lines refer to the ORIGINAL id — capture it before any re-id
+      const x=normalizeInsp(o.insp); const pm=new Map(); let replaced=null; let skip=false;
+      if(existing.has(x.id)){
+        if(!dupChoice){ busy.hide(); dupChoice=await chooseSheet('Already on this '+DEV+'','“'+inspTitle(x)+'” is already in your inspections. What should happen to inspections that are already here?',[{label:'Replace with the backup version',value:'replace',primary:true},{label:'Keep both (import as copies)',value:'copy'},{label:'Skip them',value:'skip'}])||'skip'; busy.show('Restoring…'); }
+        if(dupChoice==='skip') skip=true; else if(dupChoice==='replace') replaced=allPhotos(existing.get(x.id)).map(p=>p.id); else x.id=uid();
+      }
+      if(skip){ ctx={skip:true,origId:origId,pm:pm}; return; }
+      allPhotos(x).forEach(p=>{ const nid=uid(); pm.set(p.id,nid); p.id=nid; });
+      ctx={insp:x,origId:origId,pm:pm,replaced:replaced};
+      total+=pm.size; return;
+    }
+    if(o.t==='photo'){
+      if(!ctx||ctx.skip||o.iid!==ctx.origId) return; const nid=ctx.pm.get(o.id); if(!nid) return;
+      const full=b64ToAB(o.full); let thumb=o.thumb?b64ToAB(o.thumb):null;
+      if(!thumb){ try{ thumb=(await thumbFromFull(full)).thumb; }catch(e){ thumb=full; } }
+      await dbWrite([{s:'full',k:nid,v:full},{s:'thumb',k:nid,v:thumb}]);
+      done++; if(onProg) onProg(done,Math.max(total,done)); return;
+    }
+    if(o.t==='end'){ await finish(); }
+  }
+  while(pos<file.size){
+    const ab=await blobToAB(file.slice(pos,pos+CH)); pos+=CH;
+    buf+=dec.decode(ab,{stream:pos<file.size});
+    let nl; while((nl=buf.indexOf('\n'))>=0){ const line=buf.slice(0,nl); buf=buf.slice(nl+1); await handle(line); }
+  }
+  if(buf.trim()) await handle(buf);
+  await finish();
+  return imported;
+}
+async function importFile(file,onProg){
+  const head=await blobToText(file.slice(0,300));
+  if(/^\s*\{\s*"format"\s*:\s*"photo-addendum-backup"/.test(head)) return importBackupLines(file,onProg);
+  let s; try{ s=JSON.parse(await blobToText(file)); }catch(e){ throw new Error('That file isn’t a Photo Addendum backup or project file.'); }
+  if(!s||!Array.isArray(s.areas)) throw new Error('That file isn’t a Photo Addendum backup or project file.');
+  const key=legacyKey(s); const dup=lib.find(x=>x.legacyKey&&x.legacyKey===key);
+  let replaceId=null;
+  if(dup){ busy.hide(); const v=await chooseSheet('Already on this '+DEV+'','“'+inspTitle(dup)+'” was already brought in from this file.',[{label:'Replace it with the file’s version',value:'replace',primary:true},{label:'Keep both',value:'copy'},{label:'Cancel',value:null}]); if(!v) return []; busy.show('Importing…'); if(v==='replace') replaceId=dup.id; }
+  const x=await importLegacyProject(s,{onProg:onProg});
+  if(replaceId){ const old=lib.find(y=>y.id===replaceId); await dbWrite([{s:'inspections',k:replaceId,del:true}]); if(old) await dropPhotoBytes(allPhotos(old).map(p=>p.id)); }
+  return [x];
+}
+async function runImport(file){
+  busy.show('Importing…');
+  try{
+    await loadLibrary();
+    const got=await importFile(file,(i,n)=>busy.prog(i,n,'Photo '+Math.min(i+1,n)+' of '+n));
+    busy.hide();
+    if(!got.length){ toast('Nothing was imported.'); return; }
+    if(cur) cur=null;
+    if(got.length===1){ await openInspection(got[0].id); toast('Imported “'+inspTitle(got[0])+'” ✓',null,null,4000); }
+    else { await showLibrary(); toast('Restored '+got.length+' inspections ✓',null,null,4000); }
+  }catch(e){ busy.hide(); logErr('import',e); toast('Import failed: '+(e.message||e),null,null,7000); }
+}
+
+/* ============================== MIGRATION FROM v3 ============================== */
+function readV3Record(){
+  return new Promise(res=>{
+    let rq; try{ rq=indexedDB.open(V3_DB); }catch(e){ return res(null); }
+    rq.onupgradeneeded=()=>{ try{ rq.transaction.abort(); }catch(e){} }; // it didn't exist — don't create it
+    rq.onsuccess=()=>{ const d=rq.result; try{
+        if(!d.objectStoreNames.contains(V3_STORE)){ d.close(); return res(null); }
+        const g=d.transaction(V3_STORE,'readonly').objectStore(V3_STORE).get(V3_KEY);
+        g.onsuccess=()=>{ d.close(); res(g.result||null); }; g.onerror=()=>{ d.close(); res(null); };
+      }catch(e){ try{ d.close(); }catch(_){} res(null); } };
+    rq.onerror=()=>res(null); rq.onblocked=()=>res(null);
+  });
+}
+function legacyHasContent(s){ return !!(s&&Array.isArray(s.areas)&&(s.areas.some(a=>STAGES.some(st=>a[st]&&(((a[st].photos||[]).length)||(a[st].note||'').trim())))||((s.details&&s.details.address)||'').trim())); }
+async function getLegacy(){
+  let raw=null; try{ raw=await withTimeout(readV3Record(),6000,'Reading the previous version'); }catch(e){ logErr('v3read',e); throw e; }
+  if(!raw){ try{ raw=localStorage.getItem(V3_LS); }catch(e){} }
+  if(!raw) return null; try{ return typeof raw==='string'?JSON.parse(raw):raw; }catch(e){ return null; }
+}
+async function migrateV3IfNeeded(){
+  const done=await withTimeout(kvGet('v3migrated'),9000,'Checking storage');
+  if(done) return;
+  let s=null; try{ s=await getLegacy(); }catch(e){ return; } // old storage busy — try again next launch (flag not set)
+  if(legacyHasContent(s)){
+    busy.show('Moving your saved inspection into the new version…');
+    try{ const x=await importLegacyProject(s,{fixedId:'v3-migrated',onProg:(i,n)=>busy.prog(i,n,'Photo '+Math.min(i+1,n)+' of '+n)});
+      migratedNote='Your inspection from the previous version (“'+inspTitle(x)+'”, '+photoCountText(allPhotos(x).length)+') was moved in automatically.'; }
+    catch(e){ logErr('migrate',e); busy.hide(); toast('Couldn’t move the previous inspection: '+e.message+' — it’s still safe; try ⋯ → About → Recover.',null,null,8000); return; }
+    busy.hide();
+  }
+  try{ await kvPut('v3migrated',Date.now()); }catch(e){}
+}
+async function recoverV3(){
+  let s=null; try{ s=await getLegacy(); }catch(e){ toast('The previous version’s storage is busy — close other tabs of the app and try again.'); return; }
+  if(!legacyHasContent(s)){ toast('No inspection from the previous version was found on this '+DEV+'.'); return; }
+  busy.show('Recovering…');
+  try{ const x=await importLegacyProject(s,{onProg:(i,n)=>busy.prog(i,n,'Photo '+Math.min(i+1,n)+' of '+n)}); busy.hide(); await openInspection(x.id); toast('Recovered a copy of the previous-version inspection ✓'); }
+  catch(e){ busy.hide(); toast('Recovery failed: '+e.message); }
+}
+
+/* ============================== PDF REPORT ============================== */
+const WINANSI_EXTRA='€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ';
+function pdfSafe(s){
+  s=String(s==null?'':s).replace(/\r\n?/g,'\n').replace(/[‐-‒−]/g,'-').replace(/ /g,' ').replace(/→/g,'->');
+  let o=''; for(const ch of s){ const c=ch.codePointAt(0); if(c===10||c===9||(c>=32&&c<127)||(c>=160&&c<=255)||WINANSI_EXTRA.indexOf(ch)>=0) o+=ch; }
+  return o;
+}
+async function buildPDF(insp,type,size,onProg){
+  if(!window.jspdf||!window.jspdf.jsPDF) throw new Error('The PDF engine is missing from this copy of the app. Reopen the app while online to update it.');
+  const jsPDF=window.jspdf.jsPDF;
+  const used=type==='movein'?['movein']:STAGES;
+  const rooms=insp.areas.filter(r=>used.some(st=>r[st].photos.length||(r[st].note||'').trim()||r[st].cond)||(type!=='movein'&&(r.tag||hasCharge(r))));
+  // 1) gather photo bytes (shrunk for email-size reports)
+  const need=[]; rooms.forEach(r=>used.forEach(st=>r[st].photos.forEach((p,i)=>need.push({p:p,max:(type!=='movein'&&st!=='afterrepairs'&&i===0)?1100:(type==='movein'?900:720)}))));
+  const imgs=new Map();
+  for(let k=0;k<need.length;k++){
+    if(onProg) onProg(k,need.length,'Preparing photo '+(k+1)+' of '+need.length);
+    const it=need[k], p=it.p;
+    let ab=null; try{ ab=await dbGet('full',p.id); }catch(e){ logErr('pdfGet',e); }
+    if(!ab) continue;
+    let data=new Uint8Array(ab), w=p.w, h=p.h;
+    if(size==='email'&&Math.max(w||0,h||0)>it.max){ try{ const s=await shrinkJPEG(ab,it.max,0.72); data=new Uint8Array(s.ab); w=s.w; h=s.h; }catch(e){ logErr('pdfShrink',e); } }
+    imgs.set(p.id,{data:data,w:w||4,h:h||3});
+    if(k%8===7) await sleep(0);
+  }
+  if(onProg) onProg(need.length,need.length,'Laying out pages…');
+  await nextFrame();
+
+  const doc=new jsPDF({unit:'pt',format:'letter',compress:true});
+  const PW=612,PH=792,M=36,CW=PW-2*M,TOPY=42,BOT=PH-50;
+  const C={NAVY:[29,58,95],INK:[30,40,52],MUT:[105,116,128],LINE:[212,219,227],SOFT:[244,246,249],BOX:[234,238,243],GREEN:[43,122,75],RED:[163,58,58],AMBER:[147,101,26],WHITE:[255,255,255]};
+  const T=pdfSafe; let y=0;
+  const setF=(st,sz,col)=>{ doc.setFont('helvetica',st); doc.setFontSize(sz); doc.setTextColor(col[0],col[1],col[2]); };
+  const fill=c=>doc.setFillColor(c[0],c[1],c[2]); const draw=c=>doc.setDrawColor(c[0],c[1],c[2]);
+  const fit=(s,w)=>{ s=T(s); if(doc.getTextWidth(s)<=w) return s; while(s.length>1&&doc.getTextWidth(s+'…')>w) s=s.slice(0,-1); return s+'…'; };
+  const newPage=()=>{ doc.addPage(); y=TOPY; };
+  const ensure=h=>{ if(y+h>BOT){ newPage(); return true; } return false; };
+  const opacity=o=>{ try{ doc.setGState(new doc.GState({opacity:o})); }catch(e){} };
+  const pageNo=()=>doc.internal.getCurrentPageInfo().pageNumber;
+  const bookmark=t=>{ try{ doc.outline.add(null,T(t),{pageNumber:pageNo()}); }catch(e){} };
+  const d=insp.details; const place=[d.address,unitText(d.unit)].filter(Boolean).join(', ');
+
+  // ---- first page header ----
+  setF('bold',18,C.NAVY); doc.text('PHILLIPS REAL ESTATE',M,50);
+  setF('bold',8.5,C.NAVY); doc.text('BILL & RED PROPERTY MANAGEMENT',PW-M,50,{align:'right'});
+  draw(C.NAVY); doc.setLineWidth(1.4); doc.line(M,57,PW-M,57);
+  setF('normal',8,C.MUT); doc.text(T(BRAND_LINE),M,69);
+  setF('bold',15,C.NAVY); doc.text(type==='movein'?'PHOTO ADDENDUM — Move-In Condition Report':'PHOTO ADDENDUM — Move-In / Move-Out Condition Report',M,93);
+  setF('normal',8.5,C.MUT); doc.text(T('Prepared '+fmtStamp(Date.now())+' · Each photo is date-stamped with the date and time it was taken.'),M,106);
+  draw(C.LINE); fill(C.SOFT); doc.setLineWidth(.8); doc.roundedRect(M,115,CW,84,5,5,'FD');
+  const row=(x,yy,k,v)=>{ setF('bold',9,C.NAVY); doc.text(k,x,yy); setF('normal',9,C.INK); doc.text(fit(v||'—',CW/2-92),x+66,yy); };
+  const c2=M+CW/2+6;
+  row(M+12,133,'Property:',d.address); row(c2,133,'Unit #:',d.unit);
+  row(M+12,151,'Tenant(s):',d.tenant); row(c2,151,'Inspector:',d.inspector);
+  row(M+12,169,'Move-In:',fmtYMD(d.movein)); row(c2,169,'Move-Out:',fmtYMD(d.moveout));
+  row(M+12,187,'Rent:',d.rent); row(c2,187,'Deposit:',d.deposit);
+  y=214; bookmark('Summary');
+
+  // ---- summary table ----
+  setF('bold',11.5,C.NAVY); doc.text('Inspection Summary',M,y+9); y+=16;
+  const cols=type==='movein'?[['Room / Area',196],['Condition',78],['Photos',52],['Comments',CW-326]]:[['Room / Area',170],['Move-In',96],['Move-Out',96],['Result',90],['Charge',CW-452]];
+  const rh=15;
+  const head=()=>{ fill(C.NAVY); doc.rect(M,y,CW,rh,'F'); setF('bold',8,C.WHITE); let x=M+6; cols.forEach(c=>{ doc.text(c[0],x,y+10.5); x+=c[1]; }); y+=rh; };
+  const cell=sd=>{ const n=sd.photos.length; return (n?photoCountText(n):'—')+(sd.cond?' · '+condLabel(sd.cond):''); };
+  head();
+  if(!rooms.length){ setF('italic',8.5,C.MUT); doc.text('No rooms with photos or notes yet.',M+6,y+11); y+=rh; }
+  rooms.forEach((r,i)=>{
+    if(y+rh>BOT){ newPage(); head(); }
+    if(i%2===0){ fill(C.SOFT); doc.rect(M,y,CW,rh,'F'); }
+    const vals=type==='movein'?[roomTitle(r),condLabel(r.movein.cond)||'—',String(r.movein.photos.length),(r.movein.note||'').replace(/\s+/g,' ')]:
+      [roomTitle(r),cell(r.movein),cell(r.moveout),tagLabel(r.tag)||'—',hasCharge(r)?fmtMoney(parseMoney(r.charge)):''];
+    let x=M+6; vals.forEach((v,ci)=>{ const col=(type!=='movein'&&ci===3&&r.tag)?(r.tag==='damage'?C.RED:r.tag==='cleaning'?C.AMBER:C.GREEN):C.INK; setF(ci===0||(type!=='movein'&&ci===3&&r.tag)?'bold':'normal',8,col); doc.text(fit(v,cols[ci][1]-8),x,y+10.5); x+=cols[ci][1]; });
+    y+=rh;
+  });
+  draw(C.LINE); doc.setLineWidth(.6); doc.line(M,y,M+CW,y);
+  if(type!=='movein'){ const tot=sumCharges(insp); if(tot>0){ setF('bold',8.5,C.NAVY); doc.text('Total estimated charges',M+6,y+12); doc.text(fmtMoney(tot),M+CW-6,y+12,{align:'right'}); y+=18; } }
+  y+=16;
+
+  // ---- helpers for room pages ----
+  const titleBar=(r,cont)=>{
+    fill(C.NAVY); doc.roundedRect(M,y,CW,20,3,3,'F');
+    setF('bold',10.5,C.WHITE); doc.text(fit(roomTitle(r)+(cont?' (continued)':''),CW-170),M+9,y+13.6);
+    if(!cont){ let rx=M+CW-6;
+      const chip=(txt,col)=>{ setF('bold',7,C.WHITE); const w=doc.getTextWidth(txt)+12; rx-=w; fill(col); doc.roundedRect(rx,y+4.5,w,11,5.5,5.5,'F'); doc.text(txt,rx+6,y+12.3); rx-=5; };
+      if(type!=='movein'&&r.tag) chip(tagLabel(r.tag).toUpperCase()+(hasCharge(r)?' · '+fmtMoney(parseMoney(r.charge)):''),r.tag==='damage'?C.RED:r.tag==='cleaning'?C.AMBER:C.GREEN);
+      if(type==='movein'&&r.movein.cond) chip(condLabel(r.movein.cond).toUpperCase(),r.movein.cond==='poor'?C.RED:r.movein.cond==='fair'?C.AMBER:C.GREEN);
+    }
+    y+=26;
+  };
+  const photoCell=(p,x,yy,w,h,empty)=>{
+    draw(C.LINE); fill(C.BOX); doc.setLineWidth(.6); doc.roundedRect(x,yy,w,h,3,3,'FD');
+    if(!p){ setF('italic',8.5,C.MUT); doc.text(empty||'No photo',x+w/2,yy+h/2+3,{align:'center'}); return; }
+    const im=imgs.get(p.id); if(!im){ setF('italic',8,C.MUT); doc.text('Photo unavailable',x+w/2,yy+h/2+3,{align:'center'}); return; }
+    const ar=im.w/im.h; let dw=w-4,dh=dw/ar; if(dh>h-4){ dh=h-4; dw=dh*ar; }
+    const ix=x+(w-dw)/2, iy=yy+(h-dh)/2;
+    try{ doc.addImage(im.data,'JPEG',ix,iy,dw,dh,'p'+p.id,'NONE'); }catch(e){ logErr('addImage',e); }
+    if(!p.stamped){ const st=fmtStamp(p.ts); const fs=Math.max(5.5,Math.min(7,w/42)); setF('normal',fs,C.WHITE); const sw=doc.getTextWidth(st)+6, sh=fs+4;
+      opacity(.6); fill([0,0,0]); doc.rect(ix+dw-sw,iy+dh-sh,sw,sh,'F'); opacity(1); doc.text(st,ix+dw-3,iy+dh-3); }
+  };
+  const capLine=(p,x,w,yy)=>{ if(p&&p.cap){ setF('italic',7,C.INK); doc.text(fit(p.cap,w),x,yy); } };
+  const noteLines=(sd,w)=>{ const out=[]; if(sd.cond) out.push({t:'Condition: '+condLabel(sd.cond),b:1}); const n=(sd.note||'').trim(); if(n){ setF('normal',8.5,C.INK); doc.splitTextToSize(T(n),w).forEach(l=>out.push({t:l})); } if(!out.length) out.push({t:'—',m:1}); return out; };
+  const drawLine=(l,x)=>{ if(!l) return; setF(l.b?'bold':'normal',8.5,l.m?C.MUT:C.INK); doc.text(l.t,x,y+8); };
+  const LH=10.5;
+
+  const compareRoom=r=>{
+    const gap=14, cw=(CW-gap)/2, x1=M, x2=M+cw+gap, mainH=176;
+    const mi=r.movein.photos, mo=r.moveout.photos;
+    const capH=((mi[0]&&mi[0].cap)||(mo[0]&&mo[0].cap))?10:0;
+    ensure(26+11+mainH+capH+30);
+    bookmark(roomTitle(r)); titleBar(r,false);
+    const labels=()=>{ setF('bold',8,C.GREEN); doc.text('MOVE-IN'+(mi.length?' · '+photoCountText(mi.length):''),x1,y+7); setF('bold',8,C.RED); doc.text('MOVE-OUT'+(mo.length?' · '+photoCountText(mo.length):''),x2,y+7); y+=11; };
+    labels();
+    photoCell(mi[0],x1,y,cw,mainH,'No move-in photo');
+    photoCell(mo[0],x2,y,cw,mainH,(mo.length||d.moveout||countStage(insp,'moveout'))?'No move-out photo':'Move-out pending');
+    y+=mainH+3;
+    if(capH){ capLine(mi[0],x1,cw,y+7); capLine(mo[0],x2,cw,y+7); y+=capH; }
+    const e1=mi.slice(1), e2=mo.slice(1), sg=8, sw=(cw-sg)/2, sh=Math.round(sw*0.75);
+    const rows=Math.max(Math.ceil(e1.length/2),Math.ceil(e2.length/2));
+    for(let k=0;k<rows;k++){
+      const a=e1.slice(k*2,k*2+2), b=e2.slice(k*2,k*2+2); const hc=a.concat(b).some(p=>p.cap); const rh2=sh+(hc?9:0)+5;
+      if(y+rh2>BOT){ newPage(); titleBar(r,true); labels(); }
+      a.forEach((p,j)=>{ const x=x1+j*(sw+sg); photoCell(p,x,y,sw,sh); capLine(p,x,sw,y+sh+7); });
+      b.forEach((p,j)=>{ const x=x2+j*(sw+sg); photoCell(p,x,y,sw,sh); capLine(p,x,sw,y+sh+7); });
+      y+=rh2;
+    }
+    y+=3;
+    const L=noteLines(r.movein,cw-4), R=noteLines(r.moveout,cw-4);
+    for(let i=0;i<Math.max(L.length,R.length);i++){ if(y+LH>BOT){ newPage(); titleBar(r,true); } drawLine(L[i],x1); drawLine(R[i],x2); y+=LH; }
+    const ar=r.afterrepairs;
+    if(ar.photos.length||(ar.note||'').trim()||ar.cond){
+      y+=4; const gw=(CW-3*8)/4, gh=Math.round(gw*0.75);
+      if(ensure(12+(ar.photos.length?gh+10:LH))) titleBar(r,true);
+      const lab=c=>{ setF('bold',8,C.AMBER); doc.text('AFTER REPAIRS / CLEANING'+(c?' (continued)':(ar.photos.length?' · '+photoCountText(ar.photos.length):''))+'  —  Civil Code § 1950.5',M,y+7); y+=11; };
+      lab(false);
+      for(let k=0;k<ar.photos.length;k+=4){ const rowp=ar.photos.slice(k,k+4); const hc=rowp.some(p=>p.cap); const rh2=gh+(hc?9:0)+5;
+        if(y+rh2>BOT){ newPage(); titleBar(r,true); lab(true); }
+        rowp.forEach((p,j)=>{ const x=M+j*(gw+8); photoCell(p,x,y,gw,gh); capLine(p,x,gw,y+gh+7); }); y+=rh2; }
+      noteLines(ar,CW-4).forEach(l=>{ if(y+LH>BOT){ newPage(); titleBar(r,true); } drawLine(l,M); y+=LH; });
+    }
+    y+=14;
+  };
+  const moveinRoom=r=>{
+    const ph=r.movein.photos, g=10, gw=(CW-2*g)/3, gh=Math.round(gw*0.75);
+    const c0=ph.slice(0,3).some(p=>p.cap);
+    ensure(26+(ph.length?gh+(c0?9:0)+6:14)+LH*2);
+    bookmark(roomTitle(r)); titleBar(r,false);
+    if(!ph.length){ setF('italic',8.5,C.MUT); doc.text('No photos',M,y+8); y+=14; }
+    for(let k=0;k<ph.length;k+=3){ const rowp=ph.slice(k,k+3); const hc=rowp.some(p=>p.cap); const rh2=gh+(hc?9:0)+6;
+      if(y+rh2>BOT){ newPage(); titleBar(r,true); }
+      rowp.forEach((p,j)=>{ const x=M+j*(gw+g); photoCell(p,x,y,gw,gh); capLine(p,x,gw,y+gh+7); }); y+=rh2; }
+    noteLines(r.movein,CW-4).forEach(l=>{ if(y+LH>BOT){ newPage(); titleBar(r,true); } drawLine(l,M); y+=LH; });
+    y+=14;
+  };
+  const sectionBar=t=>{ fill(C.NAVY); doc.roundedRect(M,y,CW,20,3,3,'F'); setF('bold',10.5,C.WHITE); doc.text(T(t),M+9,y+13.6); y+=26; };
+
+  // ---- rooms ----
+  if(rooms.length&&y>BOT-260) newPage();
+  rooms.forEach(r=>{ if(type==='movein') moveinRoom(r); else compareRoom(r); });
+
+  // ---- general notes ----
+  const gn=(d.gennotes||'').trim();
+  if(gn){ setF('normal',8.5,C.INK); const ls=doc.splitTextToSize(T(gn),CW-4); ensure(26+Math.min(ls.length,4)*LH); bookmark('General Notes'); sectionBar('General Notes');
+    ls.forEach(l=>{ if(y+LH>BOT){ newPage(); sectionBar('General Notes (continued)'); } setF('normal',8.5,C.INK); doc.text(l,M+2,y+8); y+=LH; }); y+=14; }
+
+  // ---- deduction worksheet ----
+  if(type!=='movein'){
+    const items=insp.areas.filter(r=>r.tag==='damage'||r.tag==='cleaning');
+    if(items.length){
+      const dc=[['Room / Area',150],['Type',62],['Move-out notes',CW-292],['Amount',80]];
+      ensure(26+15+30+60); bookmark('Deposit Deduction Worksheet'); sectionBar('Deposit Deduction Worksheet');
+      const dh=()=>{ fill(C.NAVY); doc.rect(M,y,CW,15,'F'); setF('bold',8,C.WHITE); let x=M+6; dc.forEach(c=>{ doc.text(c[0],x,y+10.5); x+=c[1]; }); y+=15; };
+      dh();
+      items.forEach((r,i)=>{ setF('normal',8,C.INK); const nl=doc.splitTextToSize(T((r.moveout.note||'—').replace(/\s+/g,' ')),dc[2][1]-8).slice(0,3); const h=Math.max(15,nl.length*10+5);
+        if(y+h>BOT){ newPage(); dh(); }
+        if(i%2===0){ fill(C.SOFT); doc.rect(M,y,CW,h,'F'); }
+        let x=M+6; setF('bold',8,C.INK); doc.text(fit(roomTitle(r),dc[0][1]-8),x,y+10.5); x+=dc[0][1];
+        setF('bold',8,r.tag==='damage'?C.RED:C.AMBER); doc.text(tagLabel(r.tag),x,y+10.5); x+=dc[1][1];
+        setF('normal',8,C.INK); nl.forEach((l,j)=>doc.text(l,x,y+10.5+j*10)); x+=dc[2][1];
+        setF('normal',8,C.INK); doc.text(parseMoney(r.charge)>0?fmtMoney(parseMoney(r.charge)):'—',M+CW-6,y+10.5,{align:'right'});
+        y+=h; });
+      const tot=sumCharges(insp), dep=parseMoney(d.deposit);
+      if(ensure(64)) sectionBar('Deposit Deduction Worksheet (continued)');
+      draw(C.NAVY); doc.setLineWidth(.8); doc.line(M,y,M+CW,y); y+=4;
+      const tl=(k,v,b)=>{ setF(b?'bold':'normal',9,b?C.NAVY:C.INK); doc.text(k,M+CW-96,y+10,{align:'right'}); doc.text(v,M+CW-6,y+10,{align:'right'}); y+=14; };
+      tl('Total deductions',fmtMoney(tot),true);
+      if(dep){ tl('Security deposit',fmtMoney(dep)); tl('Balance (deposit less deductions)',fmtMoney(dep-tot),true); }
+      setF('italic',7.5,C.MUT); doc.text(T('Estimates entered at move-out. Worksheet to support the itemized statement required by Civil Code § 1950.5(g); attach receipts or invoices where required.'),M,y+8,{maxWidth:CW}); y+=24;
+    }
+  }
+
+  // ---- signatures ----
+  const sigs=(insp.signatures||[]).filter(s=>s.data&&(type!=='movein'||s.stage==='movein'));
+  if(sigs.length){
+    const bh=80; setF('normal',8.5,C.INK); const ack=doc.splitTextToSize(T('“'+ACK_TEXT+'”'),CW);
+    ensure(26+ack.length*LH+12+bh); bookmark('Acknowledgment & Signatures'); sectionBar('Acknowledgment & Signatures');
+    setF('italic',8.5,C.INK); doc.text(ack,M,y+8); y+=ack.length*LH+12;
+    const colW=(CW-24)/2; let col=0;
+    sigs.forEach(s=>{
+      if(col===0&&y+bh>BOT) newPage();
+      const x=M+col*(colW+24);
+      try{ const pr=doc.getImageProperties(s.data); const a=pr.width/pr.height; let h=44,w=h*a; if(w>colW){ w=colW; h=w/a; } doc.addImage(s.data,'PNG',x,y+46-h,w,h); }catch(e){ logErr('sigImg',e); }
+      draw(C.MUT); doc.setLineWidth(.7); doc.line(x,y+50,x+colW,y+50);
+      setF('bold',8.5,C.INK); doc.text(fit(s.name||roleLabel(s.role),colW),x,y+61);
+      setF('normal',7.5,C.MUT); doc.text(fit(roleLabel(s.role)+' · '+STAGE_NAME[s.stage]+' · signed '+fmtStamp(s.ts),colW),x,y+71);
+      col++; if(col===2){ col=0; y+=bh; }
+    });
+    if(col===1) y+=bh;
+  }
+
+  // ---- footer on every page ----
+  const N=doc.internal.getNumberOfPages();
+  for(let i=1;i<=N;i++){
+    doc.setPage(i); draw(C.LINE); doc.setLineWidth(.6); doc.line(M,PH-38,PW-M,PH-38);
+    setF('normal',7.5,C.MUT); doc.text(fit('Phillips Real Estate · Bill & Red Property Management · Photo Addendum'+(place?' — '+place:''),CW-70),M,PH-28);
+    doc.text('Page '+i+' of '+N,PW-M,PH-28,{align:'right'});
+    setF('normal',6.5,C.MUT); doc.text(T(LEGAL_LINE),M,PH-18);
+  }
+  const name=(slug(d.address)||'Inspection')+(d.unit?'_'+slug(unitText(d.unit)):'')+'_'+(type==='movein'?'MoveIn':'MoveOut')+'_PhotoAddendum_'+todayYMD()+'.pdf';
+  const blob=doc.output('blob');
+  return {blob:blob,name:name,pages:N};
+}
+function openPdfSheet(){
+  if(!cur) return;
+  if(!cur.areas.length){ toast('Add rooms and photos first.'); return; }
+  flushSave();
+  const hasOut=countStage(cur,'moveout')>0||countStage(cur,'afterrepairs')>0;
+  let type=hasOut?'moveout':'movein', size='email';
+  const radio=(name,val,cur0,title,sub)=>'<label class="radio'+(val===cur0?' sel':'')+'"><input type="radio" name="'+name+'" value="'+val+'"'+(val===cur0?' checked':'')+'><span><b>'+title+'</b><span>'+sub+'</span></span></label>';
+  openSheet('PDF Report',
+    '<div class="opt-h" style="margin-top:4px">Report</div>'+
+    radio('rtype','movein',type,'Move-In Report','Move-in photos and notes — for the lease package')+
+    radio('rtype','moveout',type,'Move-Out Report','Move-in vs. move-out side by side, after-repair photos and the deduction worksheet')+
+    '<div class="opt-h">Photo size</div>'+
+    radio('psize','email',size,'Email-friendly','Smaller file that emails easily — sharp enough to print')+
+    radio('psize','full',size,'Full resolution','Largest file — every photo at full detail')+
+    '<button class="primary wide" style="margin-top:14px" id="pdfGo">Create PDF</button><div id="pdfOut"></div>',
+    body=>{
+      body.addEventListener('change',e=>{ if(e.target.name==='rtype') type=e.target.value; if(e.target.name==='psize') size=e.target.value;
+        Array.prototype.forEach.call(body.querySelectorAll('.radio'),l=>l.classList.toggle('sel',l.querySelector('input').checked)); });
+      $('pdfGo').onclick=async()=>{
+        const go=$('pdfGo'); go.disabled=true; go.textContent='Creating…'; const out=$('pdfOut');
+        out.innerHTML='<div class="pbar"><div id="pdfBar"></div></div><div class="pmsg" id="pdfMsg">Starting…</div>';
+        const insp=cur;
+        try{
+          await flushSave();
+          const t0=Date.now();
+          const res=await buildPDF(insp,type,size,(i,n,msg)=>{ const b=$('pdfBar'); if(b) b.style.width=Math.round(i/Math.max(1,n)*100)+'%'; const m=$('pdfMsg'); if(m) m.textContent=msg; });
+          if(!$('pdfOut')) return;
+          window.__lastPdf={name:res.name,pages:res.pages,size:res.blob.size,ms:Date.now()-t0};
+          const tip=(!isBackedUp(insp)&&allPhotos(insp).length)?'<button class="secondary wide" style="margin-top:8px" id="pdfBk">💾 Also back up this inspection</button>':'';
+          out.innerHTML='<div class="result"><b>✓ PDF ready · '+res.pages+' page'+(res.pages>1?'s':'')+' · '+fmtMB(res.blob.size)+'</b><p>Tap below, then choose <b>Mail</b> to email it, <b>Print</b>, or <b>Save to Files</b>.</p><button class="primary wide" id="pdfShare">📤 Share / Save PDF</button>'+tip+'</div>';
+          go.textContent='Create again'; go.disabled=false;
+          $('pdfShare').onclick=()=>{ deliverFile(res.blob,res.name,'application/pdf').then(r=>{ if(r==='shared'||r==='downloaded') toast('PDF sent ✓'); }); };
+          if($('pdfBk')) $('pdfBk').onclick=()=>{ closeSheet(); openBackupSheet([insp.id]); };
+        }catch(e){ logErr('pdf',e); if($('pdfOut')) out.innerHTML='<div class="result err"><b style="color:var(--red)">PDF failed</b>'+esc(e.message||String(e))+'</div>'; go.disabled=false; go.textContent='Try again'; }
+      };
+    });
+}
+
+/* ============================== SETTINGS / HELP / ABOUT ============================== */
+async function loadSettings(){ try{ const s=await kvGet('settings'); if(s) settings=Object.assign(JSON.parse(JSON.stringify(DEFAULT_SETTINGS)),s); }catch(e){ logErr('settings',e); } }
+let setTimer=null;
+function saveSettingsSoon(){ clearTimeout(setTimer); setTimer=setTimeout(()=>kvPut('settings',settings).catch(e=>toast('Couldn’t save settings: '+e.message)),300); }
+async function storageText(){
+  let t='';
+  try{ if(navigator.storage&&navigator.storage.estimate){ const e=await navigator.storage.estimate(); if(e&&e.usage!=null) t+='Using '+fmtMB(e.usage)+(e.quota?' of '+fmtMB(e.quota)+' available to this app':'')+'. '; } }catch(e){}
+  try{ if(navigator.storage&&navigator.storage.persisted){ t+=(await navigator.storage.persisted())?'🔒 Protected from automatic cleanup.':'Not yet protected from automatic cleanup ('+DEV+' decides this — using the app from the Home Screen helps).'; } }catch(e){}
+  return t||'Photos and inspections are stored inside this app on this '+DEV+'.';
+}
+function openSettings(){
+  const s=settings;
+  openSheet('Settings',
+    '<label class="fl">Default inspector name<input type="text" id="setInspector" value="'+esc(s.inspector)+'" autocomplete="off"></label>'+
+    '<div class="toggle-row"><span>Stamp date, address &amp; stage onto each photo</span><input type="checkbox" id="setStamp"'+(s.stamp?' checked':'')+'></div>'+
+    '<div class="opt-h">Photo detail</div>'+
+    '<label class="radio'+(s.quality!=='high'?' sel':'')+'"><input type="radio" name="q" value="standard"'+(s.quality!=='high'?' checked':'')+'><span><b>Standard</b><span>1600 px — sharp, about 0.4 MB per photo</span></span></label>'+
+    '<label class="radio'+(s.quality==='high'?' sel':'')+'"><input type="radio" name="q" value="high"'+(s.quality==='high'?' checked':'')+'><span><b>High</b><span>2400 px — finer detail of damage, about 1 MB per photo</span></span></label>'+
+    '<div class="opt-h">Standard room list (one per line)</div><textarea id="setRooms" rows="8">'+esc((s.rooms||[]).join('\n'))+'</textarea>'+
+    '<div class="opt-h">Quick comment phrases (one per line)</div><textarea id="setPhrases" rows="6">'+esc((s.phrases||[]).join('\n'))+'</textarea>'+
+    '<button class="secondary wide" style="margin-top:10px" id="setReset">Restore default room list &amp; phrases</button>'+
+    '<div class="opt-h">Storage</div><div class="hint" id="setStorage" style="font-size:13.5px">Checking…</div>'+
+    '<button class="primary wide" style="margin-top:16px" id="setDone">Done</button>',
+    body=>{
+      storageText().then(t=>{ const el=$('setStorage'); if(el) el.textContent=t; });
+      const lines=v=>v.split('\n').map(x=>x.trim()).filter(Boolean);
+      body.addEventListener('input',e=>{ const id=e.target.id;
+        if(id==='setInspector') s.inspector=e.target.value.trim();
+        if(id==='setRooms') s.rooms=lines(e.target.value);
+        if(id==='setPhrases') s.phrases=lines(e.target.value);
+        saveSettingsSoon(); });
+      body.addEventListener('change',e=>{ if(e.target.id==='setStamp') s.stamp=e.target.checked; if(e.target.name==='q'){ s.quality=e.target.value; Array.prototype.forEach.call(body.querySelectorAll('.radio'),l=>l.classList.toggle('sel',l.querySelector('input').checked)); } saveSettingsSoon(); });
+      $('setReset').onclick=()=>{ s.rooms=DEFAULT_ROOMS.slice(); s.phrases=DEFAULT_PHRASES.slice(); $('setRooms').value=s.rooms.join('\n'); $('setPhrases').value=s.phrases.join('\n'); saveSettingsSoon(); toast('Defaults restored'); };
+      $('setDone').onclick=closeSheet;
+    },
+    ()=>{ clearTimeout(setTimer); kvPut('settings',settings).catch(()=>{}); if(cur&&openRid){ setOpenRoom(openRid,false); } });
+}
+function openHelp(){
+  openSheet('Help & tips','<div class="help">'+
+    '<h3>Saving</h3><p>Everything saves on this '+DEV+' the moment you take a photo or type — watch for <b>✓ Saved</b> at the top. The 💾 Save button is there if you want to be sure. Each inspection stays here, so months later you just open it and switch to <b>Move-Out</b>.</p>'+
+    '<h3>Keep a backup</h3><ul><li>After each move-in: ⋯ → <b>Back up this inspection</b> → Save to Files (iCloud Drive) or Mail.</li><li><b>Don’t delete the app icon</b> from your Home Screen — that erases everything stored in it.</li><li>New phone? Install the app, then ⋯ → <b>Restore from backup</b>.</li></ul>'+
+    '<h3>Fast walkthrough</h3><ul><li><b>📋 Standard list</b> adds every usual room in one tap.</li><li><b>⚡ Quick Shoot</b> is a rapid in-app camera: tap the big button for each photo, ‹ › to change rooms, no “Use Photo” step.</li><li><b>📷 Photo</b> opens the '+DEV+' camera — best in dim rooms. <b>🖼 Library</b> adds photos you already took (keeps the date they were taken).</li><li>Tap the one-tap phrases to fill in comments without typing.</li></ul>'+
+    '<h3>Move-out</h3><ul><li>Under each room, the move-in photos appear so you can shoot the same angles.</li><li>Mark each room <b>Normal wear</b>, <b>Cleaning</b> or <b>Damage</b> and enter an estimated charge — the Deposit Worksheet totals it.</li><li>Use <b>After Repairs</b> for photos of completed repairs or cleaning you deduct for.</li></ul>'+
+    '<h3>Photos</h3><p>Tap a photo to view it full screen: double-tap to zoom, swipe to move between photos, add a caption, make it the <b>main photo</b> (prints large), or delete it — with Undo.</p>'+
+    '<h3>Report</h3><p><b>📄 PDF Report</b> → Move-In Report (lease package) or Move-Out Report (side by side + worksheet). Then <b>Share / Save PDF</b> → Mail, Print or Save to Files.</p></div>');
+}
+function openWhatsNew(force){
+  openSheet('What’s new in version 4','<div class="help">'+(migratedNote?'<div class="banner info" style="margin-top:4px">✓ '+esc(migratedNote)+'</div>':'')+
+    '<ul><li><b>Every inspection is kept</b> on this '+DEV+' — reopen any property months later for move-out. No more exporting a file to carry it forward.</li>'+
+    '<li><b>Saves instantly</b> after every photo and keystroke — ✓ Saved shows at the top.</li>'+
+    '<li><b>Works with no cell signal</b> once it has opened online.</li>'+
+    '<li><b>⚡ Quick Shoot</b> rapid camera — room to room without leaving the app.</li>'+
+    '<li>Date, address and stage <b>stamped onto each photo</b>; library photos keep the date they were actually taken.</li>'+
+    '<li>Tap any photo: zoom, swipe, caption, set the main photo, delete with <b>Undo</b>.</li>'+
+    '<li><b>Condition</b> (Good / Fair / Poor), one-tap comment phrases, and move-in photos shown while you shoot move-out.</li>'+
+    '<li>Move-out result + estimated charges → <b>Deposit Deduction Worksheet</b>.</li>'+
+    '<li>Full-screen signatures for tenant <b>and</b> agent.</li>'+
+    '<li>New PDF: summary page, every photo grouped with its room, page X of Y, bookmarks, email-friendly size.</li></ul></div>'+
+    '<button class="primary wide" id="wnOk">Got it</button>',body=>{ $('wnOk').onclick=closeSheet; });
+  kvPut('seenVersion',APP_VERSION).catch(()=>{});
+}
+async function openAbout(){
+  const insps=lib.length||(await dbGetAll('inspections').catch(()=>[])).length;
+  const photos=lib.reduce((s,x)=>s+allPhotos(x).length,0);
+  let st=''; try{ if(navigator.storage&&navigator.storage.estimate){ const e=await navigator.storage.estimate(); st=fmtMB(e.usage||0)+' of '+fmtMB(e.quota||0); } }catch(e){}
+  let ps='unknown'; try{ if(navigator.storage&&navigator.storage.persisted) ps=(await navigator.storage.persisted())?'yes':'no'; }catch(e){}
+  const info=['Photo Addendum v'+APP_VERSION,'Mode: '+(isStandalone()?'Home Screen app':'browser tab'),'Storage protected: '+ps,'Storage: '+(st||'n/a'),'Inspections: '+insps+' · Photos: '+photos,'Device: '+navigator.userAgent,'Recent issues:'].concat(errLog.length?errLog.slice(-12):['none']).join('\n');
+  openSheet('About & diagnostics','<div class="diag" id="diagTxt">'+esc(info)+'</div>'+
+    '<button class="secondary wide" style="margin-top:10px" id="diagCopy">📋 Copy diagnostics</button>'+
+    '<button class="secondary wide" style="margin-top:8px" id="diagRecover">🛟 Recover inspection from previous version (v3)</button>'+
+    '<button class="secondary wide" style="margin-top:8px" id="diagReload">🔄 Reload app (gets the latest version)</button>',
+    body=>{
+      $('diagCopy').onclick=()=>{ try{ navigator.clipboard.writeText(info).then(()=>toast('Copied'),()=>toast('Couldn’t copy')); }catch(e){ toast('Couldn’t copy'); } };
+      $('diagRecover').onclick=()=>{ closeSheet(); recoverV3(); };
+      $('diagReload').onclick=()=>{ flushSave().then(()=>location.reload()); };
+    });
+}
+
+/* ============================== UI STATE (resume after iOS reloads the app) ============================== */
+let uiTimer=null;
+function persistUI(){ clearTimeout(uiTimer); uiTimer=setTimeout(()=>{ kvPut('ui',{open:cur?cur.id:null,room:openRid,scroll:Math.round(window.pageYOffset||0),t:Date.now()}).catch(()=>{}); },250); }
+function closeAllOverlays(){ closeSheet(); closeViewer(); closeCamera(); closeSigPad(); }
+
+/* ============================== EVENTS ============================== */
+function wire(){
+  // library
+  $('newInspBtn').onclick=guard(createInspection);
+  $('libMenuBtn').onclick=()=>menuSheet('Photo Addendum',[
+    {icon:'💾',label:'Back up all inspections',sub:'One file with everything — save to iCloud Drive',onClick:()=>{ if(!lib.length){ toast('No inspections yet.'); return; } openBackupSheet(lib.map(x=>x.id)); }},
+    {icon:'📥',label:'Restore from backup / import file',sub:'Backup files and older .json project files',onClick:()=>$('importFile').click()},
+    {sep:true},
+    {icon:'⚙️',label:'Settings',sub:'Inspector name, photo stamp, room list, phrases',onClick:openSettings},
+    {icon:'❓',label:'Help & tips',onClick:openHelp},
+    {icon:'✨',label:'What’s new',onClick:()=>openWhatsNew(true)},
+    {icon:'ℹ️',label:'About & diagnostics',onClick:openAbout}
+  ]);
+  $('libSearch').addEventListener('input',renderLibrary);
+  $('libList').addEventListener('click',e=>{ const a=e.target.closest('[data-act]'); if(!a) return; const c=a.closest('[data-iid]'); const x=lib.find(y=>y.id===c.dataset.iid); if(!x) return;
+    if(a.dataset.act==='open') guardRun(()=>openInspection(x.id)); else if(a.dataset.act==='more') libCardMenu(x); });
+  $('libBanner').addEventListener('click',e=>{ if(e.target.closest('[data-act=backupall]')) openBackupSheet(lib.filter(x=>!isBackedUp(x)&&allPhotos(x).length).map(x=>x.id)); });
+  $('importFile').addEventListener('change',e=>{ const f=e.target.files&&e.target.files[0]; e.target.value=''; if(f) runImport(f); });
+
+  // inspection chrome
+  $('backBtn').onclick=guard(()=>{ try{ if(history.state&&history.state.pa==='insp'){ history.back(); return; } }catch(e){} showLibrary(); });
+  window.addEventListener('popstate',()=>{ if(!$('viewer').hidden||!$('sheet').hidden||!$('sigPad').hidden||cam.open){ closeAllOverlays(); if(cur){ try{ history.pushState({pa:'insp'},''); }catch(e){} } return; } if(cur) showLibrary(); });
+  $('savePill').onclick=()=>{ const p=$('savePill'); if(p.classList.contains('error')) toast('Not saved: '+(p.dataset.err||'storage error')+'. Back up now (⋯ → Back up).',null,null,6000); else toast(lastSaved?'Saved on this '+DEV+' at '+fmtTime(lastSaved):'Saved on this '+DEV+''); };
+  $('saveBtn').onclick=()=>{ if(!cur) return; flushSave().then(ok=>toast(ok?'✓ Saved on this '+DEV+' · '+fmtTime(Date.now()):'⚠ Not saved — back up now (⋯ → Back up)',null,null,ok?2200:6000)); };
+  $('pdfBtn').onclick=openPdfSheet;
+  $('inspMenuBtn').onclick=()=>{ if(!cur) return; const x=cur; menuSheet(inspTitle(x),[
+    {icon:'💾',label:'Back up this inspection',sub:isBackedUp(x)?('Last backed up '+fmtShort(x.backupTs)):'Not backed up yet',onClick:()=>openBackupSheet([x.id])},
+    {icon:'🔁',label:'Start next tenancy (same unit)',sub:'New inspection with this address and room list',onClick:()=>{ flushSave().then(()=>startNextTenancy(x)); }},
+    {icon:'⚙️',label:'Settings',onClick:openSettings},
+    {icon:'❓',label:'Help & tips',onClick:openHelp},
+    {sep:true},
+    {icon:'🗑',label:'Delete this inspection',danger:true,onClick:()=>confirmDeleteInspection(x)}
+  ]); };
+  $('stageBar').addEventListener('click',e=>{ const b=e.target.closest('[data-stage]'); if(b) setStage(b.dataset.stage); });
+  $('detailsHead').onclick=()=>$('detailsCard').classList.toggle('collapsed');
+  Array.prototype.forEach.call(document.querySelectorAll('[data-collapse]'),h=>{ h.onclick=()=>$(h.dataset.collapse).classList.toggle('collapsed'); });
+  ['address','unit','inspector','tenant','movein','moveout','rent','deposit','gennotes'].forEach(f=>{
+    const el=$('f_'+f); const ev=(f==='movein'||f==='moveout')?'change':'input';
+    const h=()=>{ if(!cur) return; cur.details[f]=el.value; changed();
+      if(f==='address'||f==='unit') updateTitle(); if(f==='deposit') renderDeductions(); if(f==='gennotes') renderNotesSum(); renderDetailsSum(); };
+    el.addEventListener(ev,h); if(ev==='change') el.addEventListener('input',h);
+  });
+  $('walkBtn').onclick=()=>{ if(!cur||!cur.areas.length){ toast('Add rooms first — tap 📋 Standard list.'); return; } const r=cur.areas.find(x=>countable(x)&&!x[cur.stage].photos.length)||cur.areas[0]; openCamera(r.id); };
+  $('stdRoomsBtn').onclick=addStandardRooms;
+  $('addRoomBtn').onclick=guard(addRoom);
+  $('sigTenantBtn').onclick=()=>openSigPad('tenant');
+  $('sigAgentBtn').onclick=()=>openSigPad('agent');
+  $('sigList').addEventListener('click',e=>{ const b=e.target.closest('[data-act=sigdel]'); if(b) deleteSig(b.closest('[data-sid]').dataset.sid); });
+
+  // rooms (delegated)
+  const rooms=$('rooms');
+  rooms.addEventListener('click',e=>{
+    const a=e.target.closest('[data-act]'); if(!a) return; const act=a.dataset.act;
+    if(act==='std'){ addStandardRooms(); return; } if(act==='add'){ addRoom(); return; }
+    const el=a.closest('[data-rid]'); if(!el) return; const r=findRoom(el.dataset.rid); if(!r) return;
+    switch(act){
+      case 'toggle': toggleRoom(r.id); break;
+      case 'cond': r[cur.stage].cond=(r[cur.stage].cond===a.dataset.v)?'':a.dataset.v; changed(0); refreshRoom(r); break;
+      case 'tag': r.tag=(r.tag===a.dataset.v)?'':a.dataset.v; changed(0); refreshRoom(r); renderDeductions(); if(r.tag==='damage'||r.tag==='cleaning'){ const ci=document.querySelector('#room_'+r.id+' input[data-act=charge]'); if(ci&&!ci.value) setTimeout(()=>ci.focus(),50); } break;
+      case 'phrase': addPhrase(r,a.dataset.v); break;
+      case 'thumb': openViewer(r.id,a.dataset.stage,a.dataset.pid); break;
+      case 'quick': openCamera(r.id); break;
+      case 'roommenu': roomMenu(r); break;
+      case 'next': nextRoom(r.id); break;
+      case 'dictate': dictate(a,r); break;
+    }
+  });
+  rooms.addEventListener('input',e=>{
+    const t=e.target, act=t.dataset.act; if(!act) return; const el=t.closest('[data-rid]'); const r=el&&findRoom(el.dataset.rid); if(!r) return;
+    if(act==='note'){ r[cur.stage].note=t.value; changed(); clearTimeout(t._h); t._h=setTimeout(()=>fillRoomHeader(r),500); }
+    else if(act==='custom'){ r.custom=t.value; changed(); fillRoomHeader(r); }
+    else if(act==='charge'){ r.charge=t.value; changed(); fillRoomHeader(r); renderDeductions(); }
+  });
+  rooms.addEventListener('change',e=>{
+    const t=e.target, act=t.dataset.act; if(!act) return; const el=t.closest('[data-rid]'); const r=el&&findRoom(el.dataset.rid); if(!r) return;
+    if(act==='area'){ r.area=t.value; changed(0); fillRoomHeader(r); updateProgress(); }
+    else if(act==='file-cam'||act==='file-lib'){ const files=Array.prototype.slice.call(t.files||[]); t.value=''; if(files.length) addFiles(r,cur.stage,files,act==='file-cam'?'camera':'library'); }
+  });
+
+  // sheet
+  $('sheetBackdrop').onclick=closeSheet; $('sheetClose').onclick=closeSheet;
+  // viewer
+  $('vClose').onclick=closeViewer; $('vPrev').onclick=()=>viewerStep(-1); $('vNext').onclick=()=>viewerStep(1);
+  $('vMain').onclick=viewerMakeMain; $('vDel').onclick=viewerDelete;
+  $('vCap').addEventListener('input',()=>{ const r=findRoom(vw.rid,vw.insp); const p=r&&r[vw.stage].photos[vw.idx]; if(!p) return; p.cap=$('vCap').value; vw.insp.updated=Date.now(); if(cur===vw.insp) queueSave(); });
+  // camera
+  $('camDone').onclick=closeCamera; $('camShutter').onclick=shutter; $('camPrev').onclick=()=>camStep(-1); $('camNext').onclick=()=>camStep(1); $('camTorch').onclick=toggleTorch;
+  // signature
+  $('sigStageSeg').addEventListener('click',e=>{ const b=e.target.closest('[data-v]'); if(b) setSigStage(b.dataset.v); });
+  $('sigClear').onclick=initSigCanvas; $('sigCancel').onclick=closeSigPad; $('sigX').onclick=closeSigPad; $('sigSave').onclick=saveSig;
+  let sigW=0; window.addEventListener('resize',()=>{ if(!$('sigPad').hidden){ const w=$('sigWrap').clientWidth; if(sigW&&Math.abs(w-sigW)>40){ initSigCanvas(); toast('Screen rotated — please sign again.'); } sigW=w; } });
+
+  // typing: hide the bottom bar so it never covers the field you're typing in
+  document.addEventListener('focusin',e=>{ const t=e.target; if(t&&t.matches&&t.matches('textarea,select,input[type=text],input[type=search],input[type=date],input:not([type])')) document.body.classList.add('typing'); });
+  document.addEventListener('focusout',()=>{ setTimeout(()=>{ const a=document.activeElement; if(!a||!a.matches||!a.matches('textarea,select,input[type=text],input[type=search],input[type=date],input:not([type])')) document.body.classList.remove('typing'); },80); });
+  // Leaving the app: save anything pending (best effort). On pagehide, close the storage connection —
+  // Safari freezes the page, and a storage write left open by a frozen page would lock out the next launch.
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden'){ flushSave(); if(cam.open) stopStream(); }
+    else { if(dirty) queueSave(0); if(cam.open) startStream(); }
+  });
+  window.addEventListener('pagehide',()=>{ clearTimeout(saveTimer); try{ if(_db) _db.close(); }catch(e){} _db=null; });
+  window.addEventListener('pageshow',e=>{ if(e.persisted&&dirty) queueSave(0); });
+  let scT=null; window.addEventListener('scroll',()=>{ if(!cur) return; clearTimeout(scT); scT=setTimeout(persistUI,400); },{passive:true});
+  window.addEventListener('error',e=>logErr('error',e.error||e.message));
+  window.addEventListener('unhandledrejection',e=>logErr('promise',e.reason));
+}
+let guardT=0;
+function guard(fn){ return function(){ const n=Date.now(); if(n-guardT<500) return; guardT=n; return fn.apply(this,arguments); }; }
+function guardRun(fn){ const n=Date.now(); if(n-guardT<500) return; guardT=n; fn(); }
+
+/* ============================== BOOT ============================== */
+async function boot(){
+  wire();
+  Array.prototype.forEach.call(document.querySelectorAll('.devname'),e=>{ e.textContent=DEV; });
+  try{ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')) navigator.serviceWorker.register('sw.js').catch(e=>logErr('sw',e)); }catch(e){}
+  try{ if(navigator.storage&&navigator.storage.persist){ navigator.storage.persisted().then(p=>p||navigator.storage.persist()).catch(()=>{}); } }catch(e){}
+  const fail=(title,e,tip)=>{ logErr('boot',e); $('splashMsg').innerHTML='<div class="err"><b>'+title+'</b><br>'+esc((e&&e.message)||e)+'<br><br>'+tip+'<br><br><button class="primary wide" onclick="location.reload()">Try again</button></div>'; };
+  try{ await withTimeout(openDB(),9000,'Opening storage'); }
+  catch(e){ fail('This device isn’t letting the app save.',e,'If you opened it in a Private Browsing tab, open it from the Home Screen icon (or a normal Safari tab) instead. If it’s open in another tab or window, close that one.'); return; }
+  try{ await withTimeout(loadSettings(),9000,'Loading settings'); await migrateV3IfNeeded(); await loadLibrary(true); }
+  catch(e){ fail('Your inspections are safe, but storage is busy.',e,'If Photo Addendum is open in another tab or window, close it, then tap Try again.'); return; }
+  let u=null; try{ u=await withTimeout(kvGet('ui'),5000,'ui'); }catch(e){}
+  $('splash').hidden=true;
+  if(u&&u.open&&Date.now()-(u.t||0)<8*3600e3&&lib.find(x=>x.id===u.open)){
+    $('libView').hidden=false; renderLibrary(); // library is underneath, so Back works
+    await openInspection(u.open,{room:u.room,scroll:u.scroll});
+  } else { $('libView').hidden=false; renderLibrary(); }
+  let seen=null; try{ seen=await kvGet('seenVersion'); }catch(e){}
+  if(seen!==APP_VERSION&&(migratedNote||lib.length)) openWhatsNew(); else if(seen!==APP_VERSION) kvPut('seenVersion',APP_VERSION).catch(()=>{});
+}
+// test hooks
+window.__pa={get cur(){ return cur; },get lib(){ return lib; },get settings(){ return settings; },get openRid(){ return openRid; },errLog:errLog,version:APP_VERSION,
+  dbGet:dbGet,dbGetAll:dbGetAll,flushSave:flushSave,buildPDF:buildPDF,buildBackupBlob:buildBackupBlob,importFile:importFile,exifDateFromAB:exifDateFromAB,
+  openInspection:openInspection,showLibrary:showLibrary,deliverHook:null,ready:false};
+boot().then(()=>{ window.__pa.ready=true; },e=>{ logErr('boot',e); $('splashMsg').innerHTML='<div class="err"><b>Something went wrong starting the app.</b><br>'+esc(e&&e.message||e)+'<br><br><button class="primary wide" onclick="location.reload()">Try again</button></div>'; });
+})();
+</script>
+</body>
+</html>
