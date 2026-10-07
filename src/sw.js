@@ -3,7 +3,7 @@
    with a short timeout, falling back to the cached copy when offline or on a weak signal.
    Icons/manifest are cache-first. Photos and inspections are NOT here — they live in
    IndexedDB on the phone and are never touched by this file. */
-const CACHE = 'photo-addendum-v4.0';
+const CACHE = 'photo-addendum-v4.1';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {

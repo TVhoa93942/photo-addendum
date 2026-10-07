@@ -248,7 +248,9 @@ body.typing .actionbar{display:none}
 .vtitle{flex:1;min-width:0;font-size:14.5px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .vidx{font-size:13px;opacity:.75;flex:0 0 auto}
 .vstage{flex:1;position:relative;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;align-items:center;justify-content:center;touch-action:pan-x pan-y}
-.vstage img{max-width:100%;max-height:100%;object-fit:contain;display:block;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.vstage img{max-width:100%;max-height:100%;object-fit:contain;display:block;-webkit-user-select:none;user-select:none;-webkit-touch-callout:default}
+.vbtn.alb{font-size:14px;padding:0 12px;white-space:nowrap}
+.ic-foot .ph{color:var(--navy2);font-weight:700}
 .vstage.zoom{display:block}
 .vstage.zoom img{max-width:none;max-height:none;width:260%}
 .vbot{padding:8px 12px calc(var(--sab) + 10px);background:rgba(0,0,0,.35)}
@@ -399,6 +401,7 @@ body.noscroll .toast.show{transform:none}
     </div>
     <div id="rooms"></div>
     <button class="addbtn" id="addRoomBtn">＋ Add Room / Area</button>
+    <button class="secondary wide" id="albumBtn" style="margin-top:10px" hidden></button>
 
     <div class="card" id="notesCard">
       <button class="head" data-collapse="notesCard"><h2>General Notes</h2><span class="sum" id="notesSum"></span><span class="chev">▾</span></button>
@@ -440,10 +443,10 @@ body.noscroll .toast.show{transform:none}
 </div>
 
 <div class="overlay dark" id="viewer" hidden>
-  <div class="vtop"><button class="vbtn" id="vClose" aria-label="Close">✕</button><div class="vtitle" id="vTitle"></div><div class="vidx" id="vIdx"></div></div>
+  <div class="vtop"><button class="vbtn" id="vClose" aria-label="Close">✕</button><div class="vtitle" id="vTitle"></div><button class="vbtn alb" id="vAlbum" aria-label="Save this photo to the Photos app">📸 Save to Photos</button></div>
   <div class="vstage" id="vStage"><img id="vImg" alt=""></div>
   <div class="vbot">
-    <div class="vmeta" id="vMeta"></div>
+    <div class="vmeta"><b id="vIdx"></b> · <span id="vMeta"></span></div>
     <input class="vcap" id="vCap" type="text" placeholder="Add a caption (prints with the photo)" autocomplete="off">
     <div class="vbtns">
       <button class="vbtn nav" id="vPrev" aria-label="Previous">‹</button>
@@ -497,7 +500,7 @@ body.noscroll .toast.show{transform:none}
    IndexedDB in some modes. The v3 database is read for migration only and
    is never modified.
    ===================================================================== */
-const APP_VERSION='4.0';
+const APP_VERSION='4.1';
 const DB_NAME='photo_addendum_v4';
 const V3_DB='phillips_photo_addendum_db', V3_STORE='project', V3_KEY='current', V3_LS='phillips_photo_addendum_v1';
 const STAGES=['movein','moveout','afterrepairs'];
@@ -511,7 +514,7 @@ const TAGS=[['wear','Normal wear'],['cleaning','Cleaning'],['damage','Damage']];
 const ACK_TEXT='I acknowledge that the photographs and notes in this Photo Addendum fairly depict the condition of the premises as of the date signed.';
 const LEGAL_LINE='Date-stamped condition photos per California Civil Code § 1950.5 / AB 2801. Retained at least four years.';
 const BRAND_LINE='337 El Dorado St., Ste. 3-B, Monterey, CA · 831-372-8092 · bill@billandred.com · DRE #00625289';
-const DEFAULT_SETTINGS={inspector:'Bill Phillips',stamp:true,quality:'standard',rooms:DEFAULT_ROOMS.slice(),phrases:DEFAULT_PHRASES.slice()};
+const DEFAULT_SETTINGS={inspector:'Bill Phillips',stamp:true,albumPrompt:true,quality:'standard',rooms:DEFAULT_ROOMS.slice(),phrases:DEFAULT_PHRASES.slice()};
 const PHOTO_MAX={standard:1600,high:2400};
 const THUMB_MAX=360;
 const SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -524,6 +527,7 @@ const thumbCache=new Map();
 const pending=new Map();   // "roomId:stage" -> photos still processing
 const errLog=[];
 let migratedNote='';
+let sessionNew=new Set();   // photos taken with this app's cameras during this visit to an inspection
 
 /* ============================== UTIL ============================== */
 const $=id=>document.getElementById(id);
@@ -832,7 +836,7 @@ async function commitPhoto(insp,r,st,p){
   try{ await dbWrite([{s:'full',k:p.meta.id,v:p.full},{s:'thumb',k:p.meta.id,v:p.thumb},{s:'inspections',v:insp}]); }
   catch(e){ const i=r[st].photos.indexOf(p.meta); if(i>=0) r[st].photos.splice(i,1); throw storageError(e); }
   thumbCache.set(p.meta.id,URL.createObjectURL(jpegBlob(p.thumb)));
-  if(cur===insp){ lastSaved=Date.now(); setSaveStatus('saved'); }
+  if(cur===insp){ lastSaved=Date.now(); setSaveStatus('saved'); if(p.meta.src!=='library') sessionNew.add(p.meta.id); }
 }
 async function addFiles(r,st,files,src){
   const insp=cur; if(!insp||!files.length) return;
@@ -883,14 +887,14 @@ async function loadLibrary(strict){
 function firstPhotoId(x){ for(const r of x.areas){ for(const st of STAGES){ if(r[st].photos.length) return r[st].photos[0].id; } } return null; }
 function cardHTML(x){
   const d=x.details, mi=countStage(x,'movein'), mo=countStage(x,'moveout'), ar=countStage(x,'afterrepairs');
-  const pid=firstPhotoId(x), sg=(x.signatures||[]).length;
+  const pid=firstPhotoId(x), sg=(x.signatures||[]).length, na=settings.albumPrompt?albumCount(x):0;
   const bk=isBackedUp(x)?'<span class="bk ok">✓ Backed up '+esc(fmtShort(x.backupTs))+'</span>':(x.backupTs?'<span class="bk warn">Changed since backup</span>':(mi+mo+ar?'<span class="bk warn">Not backed up</span>':''));
   const sub=[d.tenant?('Tenant: '+d.tenant):'',d.movein?('In '+fmtYMD(d.movein)):'',d.moveout?('Out '+fmtYMD(d.moveout)):''].filter(Boolean).join(' · ')||'No tenant entered';
   return '<div class="icard" data-iid="'+esc(x.id)+'"><button class="ic-main" data-act="open">'+
     (pid?'<img class="ic-img" data-pid="'+esc(pid)+'" alt="">':'<span class="ic-img">🏠</span>')+
     '<span class="ic-txt"><b>'+esc(inspTitle(x))+'</b><small>'+esc(sub)+'</small>'+
     '<span class="ic-chips"><span class="chip mi'+(mi?'':' off')+'">Move-In '+(mi||'—')+'</span><span class="chip mo'+(mo?'':' off')+'">Move-Out '+(mo||'—')+'</span>'+(ar?'<span class="chip ar">Repairs '+ar+'</span>':'')+(sg?'<span class="chip sg">✍ '+sg+'</span>':'')+'</span>'+
-    '<span class="ic-foot">Edited '+esc(fmtShort(x.updated||x.created))+(bk?' · '+bk:'')+'</span></span></button>'+
+    '<span class="ic-foot">Edited '+esc(fmtShort(x.updated||x.created))+(bk?' · '+bk:'')+(na?' · <span class="ph">📸 '+na+' not in Photos</span>':'')+'</span></span></button>'+
     '<button class="ic-more" data-act="more" aria-label="Options">⋯</button></div>';
 }
 function renderLibrary(){
@@ -919,16 +923,20 @@ async function renderLibFoot(){
   $('libFoot').innerHTML=txt+'<br>Photo Addendum v'+APP_VERSION;
 }
 async function showLibrary(){
-  if(cur){ await flushSave(); stopDictation(); }
+  let offer=null;
+  if(cur){ await flushSave(); stopDictation(); if(sessionNew.size) offer={x:cur,ids:new Set(sessionNew)}; }
+  sessionNew=new Set();
   cur=null; openRid=null; persistUI();
   closeAllOverlays();
   $('inspView').hidden=true; $('libView').hidden=false; document.body.classList.remove('typing');
   await loadLibrary(); renderLibrary(); window.scrollTo(0,0);
+  if(offer) offerAlbum(offer.x,offer.ids);
 }
 function libCardMenu(x){
   menuSheet(inspTitle(x),[
     {icon:'📂',label:'Open',onClick:()=>openInspection(x.id)},
     {icon:'💾',label:'Back up this inspection',sub:'Save a copy with all photos to Files or email',onClick:()=>openBackupSheet([x.id])},
+    {icon:'📸',label:'Save photos to Photos app',sub:albumMenuSub(x),onClick:()=>openAlbumSheet(x.id)},
     {icon:'🔁',label:'Start next tenancy (same unit)',sub:'New inspection with this address and room list',onClick:()=>startNextTenancy(x)},
     {sep:true},
     {icon:'🗑',label:'Delete inspection',danger:true,onClick:()=>confirmDeleteInspection(x)}
@@ -964,7 +972,7 @@ async function openInspection(id,opts){
   opts=opts||{};
   let x=null; try{ x=await dbGet('inspections',id); }catch(e){ logErr('open',e); }
   if(!x){ toast('That inspection couldn’t be found.'); return; }
-  cur=normalizeInsp(x); openRid=null;
+  cur=normalizeInsp(x); openRid=null; sessionNew=new Set();
   $('libView').hidden=true; $('inspView').hidden=false;
   renderInspection();
   if(opts.room&&findRoom(opts.room)) setOpenRoom(opts.room,false);
@@ -1000,6 +1008,7 @@ function updateProgress(){
   bar.style.width=(cur.stage!=='afterrepairs'&&pr.total)?Math.round(pr.done/pr.total*100)+'%':'0%';
   STAGES.forEach(st=>{ const pr2=stageProgress(cur,st); const el=$('stp_'+st); if(el) el.textContent= st==='afterrepairs' ? (countStage(cur,st)?photoCountText(countStage(cur,st)):'when deducting') : (pr2.total?pr2.done+'/'+pr2.total+' rooms':'—'); });
   $('roomCount').textContent=cur.areas.length?'('+cur.areas.length+')':'';
+  renderAlbumBtn();
 }
 function setStage(st){
   if(!cur||STAGES.indexOf(st)<0||cur.stage===st) return;
@@ -1198,7 +1207,7 @@ function dictate(btn,r){
 }
 
 /* ============================== PHOTO VIEWER ============================== */
-const vw={insp:null,rid:null,stage:null,idx:0,url:null};
+const vw={insp:null,rid:null,stage:null,idx:0,url:null,ab:null,abId:null};
 function openViewer(rid,stage,pid){
   const r=findRoom(rid); if(!r) return; const ph=r[stage].photos; const i=ph.findIndex(p=>p.id===pid);
   vw.insp=cur; vw.rid=rid; vw.stage=stage; vw.idx=Math.max(0,i);
@@ -1216,16 +1225,29 @@ async function showViewerPhoto(){
   $('vMain').disabled=vw.idx===0; $('vMain').textContent=vw.idx===0?'★ Main photo':'★ Make main';
   $('vPrev').disabled=vw.idx===0; $('vNext').disabled=vw.idx===ph.length-1;
   $('vStage').classList.remove('zoom');
+  $('vAlbum').textContent=p.album?'✓ In Photos':'📸 Save to Photos';
+  vw.ab=null; vw.abId=null;
   const img=$('vImg'); const tu=thumbCache.get(p.id); if(tu) img.src=tu;
   const want=p.id;
   try{ const ab=await dbGet('full',p.id); const r2=findRoom(vw.rid,vw.insp); const p2=r2&&r2[vw.stage].photos[vw.idx];
-    if(ab&&p2&&p2.id===want&&!$('viewer').hidden){ if(vw.url) URL.revokeObjectURL(vw.url); vw.url=URL.createObjectURL(jpegBlob(ab)); img.src=vw.url; } }
+    // the full-size image carries its date-taken info, so press-and-hold → Save to Photos keeps it too
+    if(ab&&p2&&p2.id===want&&!$('viewer').hidden){ vw.ab=ab; vw.abId=want; if(vw.url) URL.revokeObjectURL(vw.url); vw.url=URL.createObjectURL(jpegBlob(withExif(ab,albumMeta(vw.insp,r2,vw.stage,p2)))); img.src=vw.url; } }
   catch(e){ logErr('viewer',e); }
+}
+function viewerSaveToPhotos(){
+  const x=vw.insp, r=findRoom(vw.rid,x), p=r&&r[vw.stage].photos[vw.idx]; if(!p) return;
+  if(!vw.ab||vw.abId!==p.id){ toast('One moment — the photo is still loading.'); return; }
+  shareFiles([makeAlbumFile(vw.ab,x,r,vw.stage,p)]).then(res=>{
+    if(res==='cancelled') return;
+    p.album=Date.now(); markAlbum(x.id,[p.id]);
+    if(!$('viewer').hidden&&vw.abId===p.id) $('vAlbum').textContent='✓ In Photos';
+    toast('✓ Saved to your Photos app');
+  },()=>toast('The share sheet didn’t open — tap Save to Photos again.'));
 }
 function closeViewer(){
   if($('viewer').hidden) return;
   $('viewer').hidden=true; document.body.classList.remove('noscroll');
-  if(vw.url){ URL.revokeObjectURL(vw.url); vw.url=null; } $('vImg').removeAttribute('src');
+  if(vw.url){ URL.revokeObjectURL(vw.url); vw.url=null; } $('vImg').removeAttribute('src'); vw.ab=null; vw.abId=null;
   const r=findRoom(vw.rid,vw.insp); if(r&&cur===vw.insp) refreshRoom(r);
 }
 function viewerStep(d){ const r=findRoom(vw.rid,vw.insp); if(!r) return; const n=r[vw.stage].photos.length; const j=vw.idx+d; if(j<0||j>=n) return; vw.idx=j; showViewerPhoto(); }
@@ -1255,11 +1277,11 @@ function viewerDelete(){
 })();
 
 /* ============================== QUICK SHOOT CAMERA ============================== */
-const cam={stream:null,track:null,insp:null,rid:null,stage:null,queue:Promise.resolve(),pend:0,count:0,torch:false,open:false};
+const cam={stream:null,track:null,insp:null,rid:null,stage:null,queue:Promise.resolve(),pend:0,count:0,torch:false,open:false,newIds:[]};
 function openCamera(rid){
   if(!cur||!cur.areas.length){ toast('Add a room first.'); return; }
   stopDictation();
-  cam.insp=cur; cam.rid=findRoom(rid)?rid:cur.areas[0].id; cam.stage=cur.stage; cam.count=0; cam.open=true; cam.torch=false;
+  cam.insp=cur; cam.rid=findRoom(rid)?rid:cur.areas[0].id; cam.stage=cur.stage; cam.count=0; cam.open=true; cam.torch=false; cam.newIds=[];
   $('cam').hidden=false; document.body.classList.add('noscroll');
   $('camStage').textContent=STAGE_NAME[cam.stage].toUpperCase(); $('camStage').className='camstage '+cam.stage;
   $('camLast').style.backgroundImage=''; $('camLast').textContent='';
@@ -1288,6 +1310,9 @@ function closeCamera(){
   if(!cam.open) return; cam.open=false; stopStream();
   $('cam').hidden=true; document.body.classList.remove('noscroll');
   if(cur===cam.insp&&cam.rid){ renderStageBar(); if(openRid!==cam.rid) setOpenRoom(cam.rid,true); else { const r=findRoom(cam.rid); if(r) refreshRoom(r); } }
+  // once the last shots finish saving, offer to put this burst in the Photos app
+  const insp=cam.insp, ids=cam.newIds;
+  cam.queue.then(()=>{ if(!ids.length) return; ids.forEach(id=>sessionNew.delete(id)); if(cur===insp) offerAlbum(insp,new Set(ids)); });
 }
 function updateCamRoom(){ const r=findRoom(cam.rid,cam.insp); if(!r) return; const i=cam.insp.areas.indexOf(r); $('camRoom').innerHTML=esc(roomTitle(r))+'<small>Room '+(i+1)+' of '+cam.insp.areas.length+' · '+photoCountText(r[cam.stage].photos.length)+'</small>'; $('camPrev').disabled=i===0; $('camNext').disabled=i===cam.insp.areas.length-1; }
 function updateCamCount(){ $('camCount').innerHTML=(cam.count?cam.count+' saved':'')+(cam.pend?'<br><span style="opacity:.8">saving '+cam.pend+'…</span>':''); }
@@ -1305,7 +1330,7 @@ function shutter(){
     try{ const r=findRoom(rid,insp); if(!r) throw new Error('Room was deleted');
       c=await grab; if(!c){ toast('That shot came out black — tap the shutter again.',null,null,3500); return; }
       const p=await makePhoto(c,c.width,c.height,{ts:ts,stage:st,src:'quick',dateSrc:'now',insp:insp});
-      await commitPhoto(insp,r,st,p); cam.count++;
+      await commitPhoto(insp,r,st,p); cam.count++; cam.newIds.push(p.meta.id);
       const u=thumbCache.get(p.meta.id); if(u&&cam.open){ $('camLast').style.backgroundImage='url("'+u+'")'; }
       if(cam.open&&cam.rid===rid) updateCamRoom();
       if(cur===insp) refreshRoom(r);
@@ -1387,6 +1412,141 @@ function deliverFile(blob,name,type){
 function downloadFallback(blob,name){
   const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.rel='noopener';
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),120000); return 'downloaded';
+}
+
+/* ============================== SAVE TO THE PHOTOS APP ============================== */
+// iPhone/iPad don't let a web app write to the Photos app on its own; the share sheet's
+// "Save Images" does it with one tap. navigator.share must run synchronously inside that tap,
+// so the files are always prepared BEFORE a Save button or offer is shown.
+let ALBUM_BATCH=30; const ALBUM_MAX_BYTES=30*1048576;
+function needsAlbum(p){ return !p.album&&p.src!=='library'; }   // library photos came from the Photos app already
+function albumCount(x){ return allPhotos(x).filter(needsAlbum).length; }
+function albumMenuSub(x){ const n=albumCount(x); return n?photoCountText(n)+' not in Photos yet':'Every photo taken with the app is in Photos'; }
+function photoEntries(x){ const out=[]; x.areas.forEach(r=>STAGES.forEach(st=>r[st].photos.forEach(p=>out.push({r:r,st:st,p:p})))); return out; }
+function asciiOnly(s,max){ s=String(s==null?'':s).replace(/[\u2013\u2014\u00b7]/g,'-').replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"').replace(/[^\x20-\x7e]/g,'').replace(/\s+/g,' ').trim(); return max?s.slice(0,max):s; }
+function exifDT(ms){ const d=new Date(ms); return d.getFullYear()+':'+pad2(d.getMonth()+1)+':'+pad2(d.getDate())+' '+pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds()); }
+function exifOffset(ms){ const o=-new Date(ms).getTimezoneOffset(), a=Math.abs(o); return (o<0?'-':'+')+pad2(Math.floor(a/60))+':'+pad2(a%60); }
+// Minimal big-endian TIFF IFD. entries: [tag, type, value]; 2 ASCII / 7 UNDEFINED take byte arrays, 3 SHORT, 4 LONG.
+function tiffIFD(entries,start){
+  const u16=v=>[(v>>8)&255,v&255], u32=v=>[(v>>>24)&255,(v>>>16)&255,(v>>>8)&255,v&255];
+  const head=2+entries.length*12+4; let out=u16(entries.length); const data=[];
+  entries.forEach(e=>{
+    const tag=e[0], type=e[1], val=e[2];
+    out=out.concat(u16(tag),u16(type));
+    if(type===2||type===7){
+      out=out.concat(u32(val.length));
+      if(val.length<=4){ const b=val.slice(); while(b.length<4) b.push(0); out=out.concat(b); }
+      else { out=out.concat(u32(start+head+data.length)); for(let i=0;i<val.length;i++) data.push(val[i]); if(data.length%2) data.push(0); }
+    } else if(type===3) out=out.concat(u32(1),u16(val),[0,0]);
+    else out=out.concat(u32(1),u32(val));
+  });
+  return out.concat([0,0,0,0],data);
+}
+function buildExifAPP1(m){
+  const str=s=>{ const a=[]; for(let i=0;i<s.length;i++) a.push(s.charCodeAt(i)&0x7f); a.push(0); return a; };
+  const ifd0=[[0x010E,2,str(m.desc)],[0x0112,3,1],[0x0131,2,str(m.sw)],[0x0132,2,str(m.dt)],[0x8769,4,0]];
+  const ex=[[0x9000,7,[48,50,51,50]],[0x9003,2,str(m.dt)],[0x9004,2,str(m.dt)],[0x9010,2,str(m.ofs)],[0x9011,2,str(m.ofs)],[0x9012,2,str(m.ofs)],[0xA001,3,1]];
+  if(m.w&&m.h) ex.push([0xA002,4,m.w],[0xA003,4,m.h]);
+  let b0=tiffIFD(ifd0,8); const exStart=8+b0.length; ifd0[4][2]=exStart; b0=tiffIFD(ifd0,8);
+  const payload=[0x45,0x78,0x69,0x66,0,0].concat([0x4D,0x4D,0,42,0,0,0,8],b0,tiffIFD(ex,exStart)), len=payload.length+2;
+  return new Uint8Array([0xFF,0xE1,(len>>8)&255,len&255].concat(payload));
+}
+// Copy of a stored JPEG carrying date taken, time zone and a room/address description (EXIF),
+// so the Photos app files it under the day it was taken. Replaces the JFIF header.
+function withExif(ab,m){
+  const src=new Uint8Array(ab); if(src.length<4||src[0]!==0xFF||src[1]!==0xD8) return ab;
+  let off=2;
+  while(off+4<=src.length&&src[off]===0xFF&&(src[off+1]===0xE0||src[off+1]===0xE1)) off+=2+((src[off+2]<<8)|src[off+3]);
+  const app1=buildExifAPP1(m), out=new Uint8Array(2+app1.length+(src.length-off));
+  out[0]=0xFF; out[1]=0xD8; out.set(app1,2); out.set(src.subarray(off),2+app1.length);
+  return out.buffer;
+}
+function albumMeta(x,r,st,p){ const d=(x&&x.details)||{}; return {desc:asciiOnly([roomTitle(r),STAGE_LONG[st],[d.address,unitText(d.unit)].filter(Boolean).join(', ')].filter(Boolean).join(' - '),120),dt:exifDT(p.ts),ofs:exifOffset(p.ts),sw:'Photo Addendum '+APP_VERSION,w:p.w,h:p.h}; }
+function albumFileName(r,st,p){ const d=new Date(p.ts); return (slug(roomTitle(r))||'Photo')+'_'+STAGE_NAME[st].replace(/[^A-Za-z]/g,'')+'_'+d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+'_'+pad2(d.getHours())+pad2(d.getMinutes())+'_'+String(p.id).slice(-4)+'.jpg'; }
+function makeAlbumFile(ab,x,r,st,p){ return new File([withExif(ab,albumMeta(x,r,st,p))],albumFileName(r,st,p),{type:'image/jpeg',lastModified:p.ts}); }
+async function prepareAlbum(x,entries,onProg){
+  const out=[]; let bytes=0;
+  for(const e of entries){
+    if(out.length>=ALBUM_BATCH||bytes>=ALBUM_MAX_BYTES) break;
+    let ab=null; try{ ab=await dbGet('full',e.p.id); }catch(err){ logErr('albumGet',err); }
+    const f=ab?makeAlbumFile(ab,x,e.r,e.st,e.p):null; out.push({e:e,f:f}); if(f) bytes+=f.size;
+    if(onProg) onProg(out.length);
+  }
+  return out;
+}
+// Must be called synchronously inside a tap. Files only (no title/text) so iOS offers "Save Images".
+function shareFiles(files){
+  if(window.__pa&&window.__pa.shareHook) return Promise.resolve(window.__pa.shareHook(files));
+  let ok=false; try{ ok=!!(navigator.share&&navigator.canShare&&navigator.canShare({files:files})); }catch(e){}
+  if(ok) return navigator.share({files:files}).then(()=>'shared',e=>{ if(e&&e.name==='AbortError') return 'cancelled'; logErr('shareFiles',e); throw e; });
+  files.forEach((f,i)=>setTimeout(()=>downloadFallback(f,f.name),i*400)); // computer browser: download instead
+  return Promise.resolve('downloaded');
+}
+// Remember which photos are in the Photos app. Not a content change: 'updated' (and backup status) stay put.
+async function markAlbum(iid,pids){
+  const ts=Date.now(), want=new Set(pids);
+  const apply=x=>allPhotos(x).forEach(p=>{ if(want.has(p.id)) p.album=ts; });
+  if(cur&&cur.id===iid){ apply(cur); queueSave(0); renderAlbumBtn(); return; }
+  try{ const x=await dbGet('inspections',iid); if(x){ apply(x); await dbWrite([{s:'inspections',v:x}]); } }catch(e){ logErr('markAlbum',e); }
+  if(!cur&&!$('libView').hidden){ await loadLibrary(); renderLibrary(); }
+}
+async function offerAlbum(x,ids){
+  if(!settings.albumPrompt||!ids||!ids.size) return;
+  const entries=photoEntries(x).filter(e=>ids.has(e.p.id)&&needsAlbum(e.p)); if(!entries.length) return;
+  const ready=(await prepareAlbum(x,entries)).filter(b=>b.f); if(!ready.length) return;
+  const n=ready.length;
+  toast('Save '+(n===1?'the new photo':n+' new photos')+' to your Photos app?','📸 Save',()=>{
+    shareFiles(ready.map(b=>b.f)).then(r=>{ if(r==='cancelled') return; markAlbum(x.id,ready.map(b=>b.e.p.id)); toast('✓ Saved to your Photos app'); },
+      ()=>toast('The share sheet didn’t open. Use ⋯ → Save photos to Photos app.',null,null,5000));
+  },10000);
+}
+function renderAlbumBtn(){
+  const b=$('albumBtn'); if(!b) return;
+  const n=(cur&&settings.albumPrompt)?albumCount(cur):0;
+  b.hidden=!n; if(n) b.textContent='📸 Save '+photoCountText(n)+' to the Photos app';
+}
+function radioHTML(name,val,cur0,title,sub){ return '<label class="radio'+(val===cur0?' sel':'')+'"><input type="radio" name="'+name+'" value="'+val+'"'+(val===cur0?' checked':'')+'><span><b>'+title+'</b><span>'+sub+'</span></span></label>'; }
+async function openAlbumSheet(iid){
+  if(cur&&cur.id===iid) await flushSave();
+  let x=(cur&&cur.id===iid)?cur:null;
+  if(!x){ try{ const y=await dbGet('inspections',iid); if(y) x=normalizeInsp(y); }catch(e){ logErr('albumOpen',e); } }
+  if(!x){ toast('That inspection couldn’t be found.'); return; }
+  const all=photoEntries(x);
+  if(!all.length){ toast('This inspection has no photos yet.'); return; }
+  const nNew=all.filter(e=>needsAlbum(e.p)).length, done=new Set();
+  let mode=nNew?'new':'all', token=0, ready=null, saved=0;
+  const left=()=>all.filter(e=>!done.has(e.p.id)&&(mode==='all'||needsAlbum(e.p)));
+  async function prep(){
+    const my=++token, out=$('alOut'); if(!out) return; ready=null;
+    const list=left();
+    if(!list.length){ out.innerHTML='<div class="result"><b>✓ '+(saved?'Done':'Nothing new to save')+'</b><p>'+(saved?photoCountText(saved)+' saved to your Photos app.':'Every photo taken with this app is already in your Photos app. Choose “All photos” to save them again.')+'</p></div>'; return; }
+    const total=Math.min(list.length,ALBUM_BATCH);
+    out.innerHTML='<div class="pbar"><div id="alBar"></div></div><div class="pmsg">Getting '+photoCountText(total)+' ready…</div>';
+    const batch=await prepareAlbum(x,list,i=>{ const b=$('alBar'); if(b&&my===token) b.style.width=Math.round(i/total*100)+'%'; });
+    if(my!==token||!$('alOut')) return;
+    batch.filter(b=>!b.f).forEach(b=>done.add(b.e.p.id));   // bytes missing — skip
+    ready=batch.filter(b=>b.f);
+    if(!ready.length){ prep(); return; }
+    const more=list.length-batch.length;
+    out.innerHTML='<button class="primary wide" style="margin-top:12px" id="alGo">📸 Save '+photoCountText(ready.length)+' to Photos</button>'+(more>0?'<div class="pmsg">Then '+more+' more</div>':'');
+    $('alGo').onclick=()=>{
+      const b=ready; if(!b) return;
+      shareFiles(b.map(y=>y.f)).then(r=>{
+        if(r==='cancelled') return;
+        const ids=b.map(y=>y.e.p.id), t=Date.now(); ids.forEach(id=>done.add(id)); saved+=ids.length; b.forEach(y=>{ y.e.p.album=t; });
+        markAlbum(x.id,ids); prep();
+      },err=>{ ALBUM_BATCH=Math.max(5,Math.floor(ALBUM_BATCH/2)); toast('The share sheet didn’t open'+(err&&err.name?' ('+err.name+')':'')+'. Getting a smaller batch ready — tap Save again.',null,null,5000); prep(); });
+    };
+  }
+  openSheet('Save to Photos app',
+    '<p class="hint" style="font-size:14px;margin-top:2px">Puts copies of this inspection’s photos in the <b>Photos app</b> on this '+DEV+' — dated when they were taken and labeled with the room and address. When the share sheet opens, tap <b>Save Images</b>.</p>'+
+    radioHTML('amode','new',mode,'Not in Photos yet ('+nNew+')','Taken with this app’s camera and not saved yet')+
+    radioHTML('amode','all',mode,'All photos ('+all.length+')','Every photo in this inspection')+
+    '<div id="alOut"></div>',
+    body=>{
+      body.addEventListener('change',e=>{ if(e.target.name!=='amode') return; mode=e.target.value; Array.prototype.forEach.call(body.querySelectorAll('.radio'),l=>l.classList.toggle('sel',l.querySelector('input').checked)); prep(); });
+      prep();
+    });
 }
 
 /* ============================== BACKUP / RESTORE ============================== */
@@ -1837,6 +1997,7 @@ function openSettings(){
   openSheet('Settings',
     '<label class="fl">Default inspector name<input type="text" id="setInspector" value="'+esc(s.inspector)+'" autocomplete="off"></label>'+
     '<div class="toggle-row"><span>Stamp date, address &amp; stage onto each photo</span><input type="checkbox" id="setStamp"'+(s.stamp?' checked':'')+'></div>'+
+    '<div class="toggle-row"><span>Offer to save new photos to the Photos app</span><input type="checkbox" id="setAlbum"'+(s.albumPrompt?' checked':'')+'></div>'+
     '<div class="opt-h">Photo detail</div>'+
     '<label class="radio'+(s.quality!=='high'?' sel':'')+'"><input type="radio" name="q" value="standard"'+(s.quality!=='high'?' checked':'')+'><span><b>Standard</b><span>1600 px — sharp, about 0.4 MB per photo</span></span></label>'+
     '<label class="radio'+(s.quality==='high'?' sel':'')+'"><input type="radio" name="q" value="high"'+(s.quality==='high'?' checked':'')+'><span><b>High</b><span>2400 px — finer detail of damage, about 1 MB per photo</span></span></label>'+
@@ -1853,11 +2014,11 @@ function openSettings(){
         if(id==='setRooms') s.rooms=lines(e.target.value);
         if(id==='setPhrases') s.phrases=lines(e.target.value);
         saveSettingsSoon(); });
-      body.addEventListener('change',e=>{ if(e.target.id==='setStamp') s.stamp=e.target.checked; if(e.target.name==='q'){ s.quality=e.target.value; Array.prototype.forEach.call(body.querySelectorAll('.radio'),l=>l.classList.toggle('sel',l.querySelector('input').checked)); } saveSettingsSoon(); });
+      body.addEventListener('change',e=>{ if(e.target.id==='setStamp') s.stamp=e.target.checked; if(e.target.id==='setAlbum') s.albumPrompt=e.target.checked; if(e.target.name==='q'){ s.quality=e.target.value; Array.prototype.forEach.call(body.querySelectorAll('.radio'),l=>l.classList.toggle('sel',l.querySelector('input').checked)); } saveSettingsSoon(); });
       $('setReset').onclick=()=>{ s.rooms=DEFAULT_ROOMS.slice(); s.phrases=DEFAULT_PHRASES.slice(); $('setRooms').value=s.rooms.join('\n'); $('setPhrases').value=s.phrases.join('\n'); saveSettingsSoon(); toast('Defaults restored'); };
       $('setDone').onclick=closeSheet;
     },
-    ()=>{ clearTimeout(setTimer); kvPut('settings',settings).catch(()=>{}); if(cur&&openRid){ setOpenRoom(openRid,false); } });
+    ()=>{ clearTimeout(setTimer); kvPut('settings',settings).catch(()=>{}); if(cur&&openRid){ setOpenRoom(openRid,false); } renderAlbumBtn(); if(!cur&&!$('libView').hidden) renderLibrary(); });
 }
 function openHelp(){
   openSheet('Help & tips','<div class="help">'+
@@ -1866,11 +2027,13 @@ function openHelp(){
     '<h3>Fast walkthrough</h3><ul><li><b>📋 Standard list</b> adds every usual room in one tap.</li><li><b>⚡ Quick Shoot</b> is a rapid in-app camera: tap the big button for each photo, ‹ › to change rooms, no “Use Photo” step.</li><li><b>📷 Photo</b> opens the '+DEV+' camera — best in dim rooms. <b>🖼 Library</b> adds photos you already took (keeps the date they were taken).</li><li>Tap the one-tap phrases to fill in comments without typing.</li></ul>'+
     '<h3>Move-out</h3><ul><li>Under each room, the move-in photos appear so you can shoot the same angles.</li><li>Mark each room <b>Normal wear</b>, <b>Cleaning</b> or <b>Damage</b> and enter an estimated charge — the Deposit Worksheet totals it.</li><li>Use <b>After Repairs</b> for photos of completed repairs or cleaning you deduct for.</li></ul>'+
     '<h3>Photos</h3><p>Tap a photo to view it full screen: double-tap to zoom, swipe to move between photos, add a caption, make it the <b>main photo</b> (prints large), or delete it — with Undo.</p>'+
+    '<h3>Your Photos app</h3><ul><li>Tap <b>📸 Save … to the Photos app</b> (under the rooms, or ⋯ → Save photos to Photos app), then <b>Save Images</b> on the share sheet. Each photo is dated when it was taken and labeled with the room and address. They land in Recents.</li><li>After Quick Shoot and when you leave an inspection, the app offers to save the new photos. Turn that off in Settings.</li><li>In the photo viewer, <b>📸 Save to Photos</b> saves just that photo — or press and hold the photo.</li><li>Want every shot in Photos with no extra tap? Take pictures with the regular Camera app and add them with <b>🖼 Library</b> — they keep their date.</li></ul>'+
     '<h3>Report</h3><p><b>📄 PDF Report</b> → Move-In Report (lease package) or Move-Out Report (side by side + worksheet). Then <b>Share / Save PDF</b> → Mail, Print or Save to Files.</p></div>');
 }
 function openWhatsNew(force){
-  openSheet('What’s new in version 4','<div class="help">'+(migratedNote?'<div class="banner info" style="margin-top:4px">✓ '+esc(migratedNote)+'</div>':'')+
-    '<ul><li><b>Every inspection is kept</b> on this '+DEV+' — reopen any property months later for move-out. No more exporting a file to carry it forward.</li>'+
+  openSheet('What’s new','<div class="help">'+(migratedNote?'<div class="banner info" style="margin-top:4px">✓ '+esc(migratedNote)+'</div>':'')+
+    '<h3 style="margin-top:4px">Version 4.1</h3><ul><li><b>📸 Save photos to your Photos app</b> — one tap on <b>Save Images</b>. Each photo is dated when it was taken and labeled with the room and address.</li><li>The app offers this after Quick Shoot and when you leave an inspection (Settings can turn the offer off). In the photo viewer, <b>📸 Save to Photos</b> saves a single photo.</li></ul>'+
+    '<h3>Version 4</h3><ul><li><b>Every inspection is kept</b> on this '+DEV+' — reopen any property months later for move-out. No more exporting a file to carry it forward.</li>'+
     '<li><b>Saves instantly</b> after every photo and keystroke — ✓ Saved shows at the top.</li>'+
     '<li><b>Works with no cell signal</b> once it has opened online.</li>'+
     '<li><b>⚡ Quick Shoot</b> rapid camera — room to room without leaving the app.</li>'+
@@ -1932,6 +2095,7 @@ function wire(){
   $('pdfBtn').onclick=openPdfSheet;
   $('inspMenuBtn').onclick=()=>{ if(!cur) return; const x=cur; menuSheet(inspTitle(x),[
     {icon:'💾',label:'Back up this inspection',sub:isBackedUp(x)?('Last backed up '+fmtShort(x.backupTs)):'Not backed up yet',onClick:()=>openBackupSheet([x.id])},
+    {icon:'📸',label:'Save photos to Photos app',sub:albumMenuSub(x),onClick:()=>openAlbumSheet(x.id)},
     {icon:'🔁',label:'Start next tenancy (same unit)',sub:'New inspection with this address and room list',onClick:()=>{ flushSave().then(()=>startNextTenancy(x)); }},
     {icon:'⚙️',label:'Settings',onClick:openSettings},
     {icon:'❓',label:'Help & tips',onClick:openHelp},
@@ -1988,7 +2152,8 @@ function wire(){
   $('sheetBackdrop').onclick=closeSheet; $('sheetClose').onclick=closeSheet;
   // viewer
   $('vClose').onclick=closeViewer; $('vPrev').onclick=()=>viewerStep(-1); $('vNext').onclick=()=>viewerStep(1);
-  $('vMain').onclick=viewerMakeMain; $('vDel').onclick=viewerDelete;
+  $('vMain').onclick=viewerMakeMain; $('vDel').onclick=viewerDelete; $('vAlbum').onclick=viewerSaveToPhotos;
+  $('albumBtn').onclick=()=>{ if(cur) openAlbumSheet(cur.id); };
   $('vCap').addEventListener('input',()=>{ const r=findRoom(vw.rid,vw.insp); const p=r&&r[vw.stage].photos[vw.idx]; if(!p) return; p.cap=$('vCap').value; vw.insp.updated=Date.now(); if(cur===vw.insp) queueSave(); });
   // camera
   $('camDone').onclick=closeCamera; $('camShutter').onclick=shutter; $('camPrev').onclick=()=>camStep(-1); $('camNext').onclick=()=>camStep(1); $('camTorch').onclick=toggleTorch;
@@ -2039,7 +2204,8 @@ async function boot(){
 // test hooks
 window.__pa={get cur(){ return cur; },get lib(){ return lib; },get settings(){ return settings; },get openRid(){ return openRid; },errLog:errLog,version:APP_VERSION,
   dbGet:dbGet,dbGetAll:dbGetAll,flushSave:flushSave,buildPDF:buildPDF,buildBackupBlob:buildBackupBlob,importFile:importFile,exifDateFromAB:exifDateFromAB,
-  openInspection:openInspection,showLibrary:showLibrary,deliverHook:null,ready:false};
+  openInspection:openInspection,showLibrary:showLibrary,deliverHook:null,shareHook:null,withExif:withExif,
+  get albumBatch(){ return ALBUM_BATCH; },set albumBatch(v){ ALBUM_BATCH=v; },ready:false};
 boot().then(()=>{ window.__pa.ready=true; },e=>{ logErr('boot',e); $('splashMsg').innerHTML='<div class="err"><b>Something went wrong starting the app.</b><br>'+esc(e&&e.message||e)+'<br><br><button class="primary wide" onclick="location.reload()">Try again</button></div>'; });
 })();
 </script>

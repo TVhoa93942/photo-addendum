@@ -48,6 +48,8 @@ with sync_playwright() as p:
     swipe(cdp, cx + 120, cy, cx - 120, cy); time.sleep(0.3)
     swipe(cdp, cx + 120, cy, cx - 120, cy); time.sleep(0.3)
     check(pg.inner_text('#vIdx') == '3 / 4', 'finger swipe left moves to the next photo (3 / 4)')
+    vb = pg.evaluate("(()=>{ const a=document.getElementById('vAlbum').getBoundingClientRect(), t=document.getElementById('vTitle').getBoundingClientRect(); return [Math.round(a.height), Math.round(t.width), a.right<=innerWidth]; })()")
+    check(vb[0] >= 40 and vb[1] >= 90 and vb[2], 'viewer: Save to Photos button fits and the room title stays readable (%s)' % vb)
     swipe(cdp, cx - 120, cy, cx + 120, cy); time.sleep(0.3)
     check(pg.inner_text('#vIdx') == '2 / 4', 'finger swipe right goes back (2 / 4)')
     # double-tap to zoom, double-tap again to reset

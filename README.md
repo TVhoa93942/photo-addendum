@@ -6,6 +6,15 @@ Move-in / move-out condition photos and PDF reports for **Phillips Real Estate**
 **Live app:** https://tvhoa93942.github.io/photo-addendum/
 Install: open the link in Safari → Share → **Add to Home Screen**. Previous version (v3) stays at `/v3/`.
 
+## Version 4.1 — save to the Photos app
+- **📸 Save to Photos app**: copies of the photos go into the iPhone/iPad Photos app via the share sheet's
+  **Save Images** (one tap — iOS doesn't let web apps write to Photos silently). Each copy carries EXIF
+  date taken + time zone and a room/stage/address description, so Photos files it under the day it was taken.
+- Offered automatically after Quick Shoot and when leaving an inspection (Settings → "Offer to save new photos
+  to the Photos app"); also under the rooms, in ⋯ menus, and per photo in the viewer (or press-and-hold).
+- Photos added from the library are never re-saved (they came from Photos). Saved photos are remembered
+  (`p.album`); marking them is not an edit, so backup status doesn't change.
+
 ## What's in version 4
 - **Every inspection is kept on the device** (a library) — reopen any property months later for move-out.
 - **Saves instantly** after every photo and keystroke; ✓ Saved shows in the header. Saving stays
@@ -25,7 +34,7 @@ Install: open the link in Safari → Share → **Add to Home Screen**. Previous 
 ## Where the data lives
 On each device, in the app's own storage (IndexedDB `photo_addendum_v4`):
 `inspections` (small JSON per inspection), `full` and `thumb` (JPEG bytes per photo, stored as ArrayBuffers),
-`kv` (settings and UI state). **iPhone and iPad keep separate copies** — move an inspection with
+`kv` (settings and UI state). Photo records note `src` (camera / quick / library / v3) and `album` (when saved to Photos). **iPhone and iPad keep separate copies** — move an inspection with
 ⋯ → Back up → AirDrop → ⋯ → Restore on the other device. Deleting the Home Screen icon erases its storage.
 Backups are JSON Lines files (`{"format":"photo-addendum-backup"}` header, then inspection and photo lines);
 Restore also accepts v1–v3 `.json` project files.

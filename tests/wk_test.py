@@ -88,6 +88,24 @@ def read_capture(d, i=-1):
       const [i, done] = arguments; const c = window.__cap[i < 0 ? window.__cap.length + i : i]; if (!c) return done(null);
       const r = new FileReader(); r.onload = () => done({name: c.name, type: c.type, size: c.blob.size, b64: r.result.split(',')[1]}); r.readAsDataURL(c.blob);""", i)
 def state(d): return J(d, "return JSON.parse(JSON.stringify(window.__pa.cur))")
+def share_hook(d):
+    J(d, "window.__shared=window.__shared||[]; window.__pa.shareHook=(files)=>{ window.__shared.push(files); return 'shared'; };")
+def read_shared(d, i=-1):
+    return d.execute_async_script("""
+      const [i, done] = arguments; const L = window.__shared || []; const files = L[i < 0 ? L.length + i : i]; if (!files) return done(null);
+      Promise.all(files.map(f => new Promise(res => { const r = new FileReader(); r.onload = () => res({name: f.name, type: f.type, size: f.size, b64: r.result.split(',')[1]}); r.readAsDataURL(f); }))).then(done);""", i)
+def exif_info(b64):
+    import io
+    from PIL import Image
+    try:
+        im = Image.open(io.BytesIO(base64.b64decode(b64))); im.load()
+        ex = im.getexif(); sub = ex.get_ifd(0x8769)
+        return {'size': im.size, 'desc': ex.get(0x010E), 'dt': ex.get(0x0132), 'dto': sub.get(0x9003), 'ofs': sub.get(0x9011), 'orient': ex.get(0x0112), 'sw': ex.get(0x0131) or ''}
+    except Exception as e:
+        return {'error': str(e)}
+def la_exif(ms):
+    import zoneinfo
+    return datetime.datetime.fromtimestamp(ms / 1000, zoneinfo.ZoneInfo('America/Los_Angeles')).strftime('%Y:%m:%d %H:%M:%S')
 def ms_local(y, mo, da, h, mi, s):
     import zoneinfo
     return int(datetime.datetime(y, mo, da, h, mi, s, tzinfo=zoneinfo.ZoneInfo('America/Los_Angeles')).timestamp() * 1000)
@@ -204,9 +222,22 @@ def scenario_main(d):
       for(const id of ids){ const ab=await window.__pa.dbGet('thumb',id); const bm=await createImageBitmap(new Blob([ab],{type:'image/jpeg'})); const c=document.createElement('canvas'); c.width=32;c.height=24; const g=c.getContext('2d'); g.drawImage(bm,0,0,32,24); const d=g.getImageData(0,0,32,24).data; let mx=0; for(let i=0;i<d.length;i+=4) mx=Math.max(mx,d[i],d[i+1],d[i+2]); out.push(mx); }
       done(out); })().catch(e=>done('ERR '+e));""")
     check(isinstance(bright, list) and all(b > 40 for b in bright), 'no black Quick Shoot frames saved (max brightness per photo %s)' % bright)
+    share_hook(d)
     click(d, '#camDone')
     check(J(d, "return document.getElementById('cam').hidden"), 'Done closes the camera')
     check(J(d, "return (document.getElementById('camVideo').srcObject===null)"), 'camera released when closed')
+    check(wait(d, "document.getElementById('toast').classList.contains('show') && document.getElementById('toast').innerText.indexOf('Save 4 new photos to your Photos app')>=0", 10), 'after Quick Shoot the app offers to save the 4 new photos to the Photos app')
+    upd0 = J(d, "return window.__pa.cur.updated")
+    click(d, '#toast button')
+    files = read_shared(d) or []
+    check(len(files) == 4 and all(f['type'] == 'image/jpeg' and f['name'].endswith('.jpg') for f in files), 'tapping Save hands 4 JPEGs to the share sheet (%s)' % [f['name'] for f in files][:2])
+    qps = J(d, "return window.__pa.cur.areas[4].movein.photos.concat(window.__pa.cur.areas[5].movein.photos).map(p=>({ts:p.ts,w:p.w,h:p.h}))")
+    infos = [exif_info(f['b64']) for f in files]
+    check(len(infos) == 4 and all(i.get('dto') == la_exif(q['ts']) for i, q in zip(infos, qps)), 'each saved photo carries its date taken (%s)' % (infos[0].get('dto') if infos else None))
+    check(all('Move-In' in (i.get('desc') or '') and '1450 Ocean View Blvd' in (i.get('desc') or '') for i in infos), 'each saved photo is labeled with room, stage and address (%r)' % (infos[0].get('desc') if infos else None))
+    check(infos and infos[0].get('ofs') in ('-07:00', '-08:00') and infos[0].get('size') == (qps[0]['w'], qps[0]['h']), 'time zone recorded and full-size image intact')
+    check(wait(d, "window.__pa.cur.areas[4].movein.photos.concat(window.__pa.cur.areas[5].movein.photos).every(p=>p.album)", 5), 'those 4 photos are remembered as in Photos')
+    check(J(d, "return window.__pa.cur.updated") == upd0, 'saving to Photos does not count as an edit (backup status unchanged)')
     check(J(d, "return document.getElementById('stp_movein').textContent") == '3/15 rooms', 'progress updates to 3/15 rooms')
 
     # --- signatures (draw with a real pointer)
@@ -430,6 +461,87 @@ def scenario_migration(d):
       const inp=document.getElementById('importFile'); inp.files=dt.files; inp.dispatchEvent(new Event('change',{bubbles:true})); done('ok');""")
     check(wait(d, "document.getElementById('toast').innerText.indexOf('isn’t a Photo Addendum')>=0", 10), 'wrong file type gives a clear message')
 
+# ------------------------------------------------------------------ Photos app
+def scenario_album(d):
+    d.get(BASE + 'index.html'); ready(d)
+    share_hook(d)
+    click(d, '#newInspBtn'); wait(d, "!document.getElementById('inspView').hidden", 10)
+    J(d, "for (const [k,v] of [['f_address','77 Album Ct, Carmel, CA'],['f_unit','2B']]) { const e=document.getElementById(k); e.value=v; e.dispatchEvent(new Event('input',{bubbles:true})); }")
+    click(d, '#stdRoomsBtn')
+    rid = J(d, "return window.__pa.cur.areas[1].id")
+    click(d, '#room_%s .room-h' % rid)
+    add_files(d, '#room_%s input[data-act=file-cam]' % rid, ['p1.jpg', 'p2.jpg'])
+    wait(d, "window.__pa.cur.areas[1].movein.photos.length===2 && !document.querySelector('.thumb.pending')", 30, 'camera photos')
+    add_files(d, '#room_%s input[data-act=file-lib]' % rid, ['p3.jpg'])
+    wait(d, "window.__pa.cur.areas[1].movein.photos.length===3 && !document.querySelector('.thumb.pending')", 30, 'library photo')
+    srcs = J(d, "return window.__pa.cur.areas[1].movein.photos.map(p=>p.src)")
+    check(srcs == ['camera', 'camera', 'library'], 'camera vs library photos tracked (%s)' % srcs)
+    btn = J(d, "const b=document.getElementById('albumBtn'); return b.hidden?null:b.textContent")
+    check(btn == '📸 Save 2 photos to the Photos app', 'inspection shows “Save 2 photos to the Photos app” (library photo left out): %r' % btn)
+    # viewer: one photo
+    click(d, '#room_%s [data-part=thumbs] .thumb' % rid, 0)
+    check(wait(d, "document.getElementById('vImg').naturalWidth>0 && document.getElementById('vAlbum').textContent.indexOf('Save to Photos')>=0", 8), 'viewer shows “📸 Save to Photos”')
+    check(wait(d, "document.getElementById('vImg').naturalWidth===1600 && document.getElementById('vImg').complete", 8), 'viewer displays the full-size, date-tagged photo')
+    vdt = d.execute_async_script("const done=arguments[0]; fetch(document.getElementById('vImg').src).then(r=>r.arrayBuffer()).then(ab=>done(window.__pa.exifDateFromAB(ab))).catch(e=>done('ERR '+e));")
+    p0ts = J(d, "return window.__pa.cur.areas[1].movein.photos[0].ts")
+    check(vdt == (p0ts // 1000) * 1000, 'viewer image carries its date taken (press-and-hold → Save to Photos keeps it)')
+    shot(d, '50_viewer_save_to_photos')
+    n0 = J(d, "return window.__shared.length")
+    click(d, '#vAlbum')
+    f1 = read_shared(d) or []
+    check(J(d, "return window.__shared.length") == n0 + 1 and len(f1) == 1, 'viewer “Save to Photos” shares exactly that photo')
+    check(J(d, "return !!window.__pa.cur.areas[1].movein.photos[0].album") and J(d, "return document.getElementById('vAlbum').textContent") == '✓ In Photos', 'button changes to “✓ In Photos”')
+    click(d, '#vClose')
+    check(J(d, "const b=document.getElementById('albumBtn'); return b.hidden?null:b.textContent") == '📸 Save 1 photo to the Photos app', 'count drops to 1')
+    upd0 = J(d, "return window.__pa.cur.updated")
+    # leaving the inspection offers the rest
+    click(d, '#backBtn'); wait(d, "!document.getElementById('libView').hidden", 5)
+    check(wait(d, "document.getElementById('toast').classList.contains('show') && document.getElementById('toast').innerText.indexOf('Save the new photo to your Photos app')>=0", 10), 'leaving the inspection offers to save the new photo')
+    shot(d, '51_leave_offer')
+    click(d, '#toast button')
+    f2 = read_shared(d) or []
+    check(len(f2) == 1, 'offer shares the 1 remaining camera photo, not the library photo')
+    rec = wait(d, "window.__pa.dbGet('inspections', window.__pa.lib[0].id).then(x=>{ const s=x.areas[1].movein.photos.map(p=>!!p.album).join(','); return s==='true,true,false'?s:''; })", 6)
+    check(rec == 'true,true,false', 'both camera photos remembered as in Photos, library photo untouched (%s)' % rec)
+    upd1 = J(d, "return window.__pa.dbGet('inspections', window.__pa.lib[0].id).then(x=>x.updated)")
+    check(upd1 == upd0, 'saving to Photos does not count as an edit')
+    check('not in Photos' not in J(d, "return document.getElementById('libList').innerText"), 'library card no longer lists photos waiting for Photos')
+    # menu → All photos, in batches of 2
+    J(d, "window.__pa.albumBatch=2")
+    click(d, '.icard .ic-more'); click_text(d, '.menu-item', 'Save photos to Photos app')
+    check(wait(d, "document.getElementById('alGo')", 10), 'Save to Photos sheet gets the photos ready')
+    check(J(d, "return document.querySelector('input[name=amode]:checked').value") == 'all', 'nothing new → sheet defaults to All photos')
+    shot(d, '52_album_sheet')
+    sizes = []
+    for _ in range(4):
+        st = wait(d, "document.getElementById('alGo') ? 'go' : ((document.getElementById('alOut')||{}).innerText||'').indexOf('saved to your Photos app')>=0 ? 'done' : ''", 10)
+        if st != 'go': break
+        click(d, '#alGo'); sizes.append(len(read_shared(d) or [])); time.sleep(0.2)
+    check(sizes == [2, 1] and 'photos saved to your Photos app' in J(d, "return document.getElementById('alOut').innerText"), 'all 3 photos saved in batches of 2 then 1 (%s)' % sizes)
+    shot(d, '53_album_done')
+    click(d, '#sheetClose'); J(d, "window.__pa.albumBatch=30")
+    # setting off → no button, no offers
+    click(d, '#libMenuBtn'); click_text(d, '.menu-item', 'Settings')
+    tap(d, d.find_element(By.ID, 'setAlbum'))
+    check(J(d, "return window.__pa.settings.albumPrompt") is False, 'Settings switch turns the Photos offer off')
+    click(d, '#setDone')
+    click(d, '.icard .ic-main'); wait(d, "window.__pa.cur", 5)
+    if J(d, "return window.__pa.openRid") != rid: click(d, '#room_%s .room-h' % rid)
+    add_files(d, '#room_%s input[data-act=file-cam]' % rid, ['p4.jpg'])
+    wait(d, "window.__pa.cur.areas[1].movein.photos.length===4 && !document.querySelector('.thumb.pending')", 30, 'one more camera photo')
+    check(J(d, "return document.getElementById('albumBtn').hidden"), 'with the offer off, the Save-to-Photos button stays hidden')
+    click(d, '#backBtn'); wait(d, "!document.getElementById('libView').hidden", 5); time.sleep(2)
+    check(not J(d, "return document.getElementById('toast').classList.contains('show') && document.getElementById('toast').innerText.indexOf('Photos app')>=0"), 'with the offer off, leaving does not ask')
+    # every file handed to the share sheet: valid JPEG with date, label, orientation
+    allf = d.execute_async_script("""const done=arguments[0]; const files=[].concat.apply([], window.__shared);
+      Promise.all(files.map(f=>new Promise(res=>{ const r=new FileReader(); r.onload=()=>res({name:f.name,b64:r.result.split(',')[1]}); r.readAsDataURL(f); }))).then(done);""")
+    infos = [exif_info(f['b64']) for f in allf]
+    check(len(infos) == 5 and all(i.get('dto') and i.get('dt') == i.get('dto') and i.get('orient') == 1 and '77 Album Ct' in (i.get('desc') or '') and i.get('sw', '').startswith('Photo Addendum') for i in infos), 'all %d shared photos decode and carry date, label and orientation' % len(infos))
+    names = [f['name'] for f in allf[-3:]]
+    check(len(set(names)) == 3 and all(n.startswith('Living_Area_MoveIn_') for n in names), 'file names are unique and readable (%s)' % names[0])
+    errs = J(d, "return window.__pa.errLog.slice()")
+    check(not errs, 'no errors logged (%s)' % errs)
+
 # ------------------------------------------------------------------ iPad
 def scenario_ipad(d):
     d.get(BASE + 'index.html'); ready(d)
@@ -509,6 +621,11 @@ if __name__ == '__main__':
             wd, d = start_driver(4445)
             try: scenario_migration(d)
             except Exception as e: log(False, 'migration scenario crashed: %s\n%s' % (e, traceback.format_exc()[-2500:])); shot(d, 'crash_migration')
+            finally: d.quit(); wd.terminate()
+        if which in ('all', 'album'):
+            wd, d = start_driver(4448)
+            try: scenario_album(d)
+            except Exception as e: log(False, 'album scenario crashed: %s\n%s' % (e, traceback.format_exc()[-2500:])); shot(d, 'crash_album')
             finally: d.quit(); wd.terminate()
         if which in ('all', 'ipad'):
             wd, d = start_driver(4447, ua=IPAD_UA, size=(1180, 900))
