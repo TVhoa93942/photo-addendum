@@ -337,6 +337,27 @@ def scenario_main(d):
         pdfs[(rtype, size)] = fn
         check(cap['type'] == 'application/pdf' and cap['size'] > 20000, 'PDF %s/%s built in %.1fs: %s (%d KB, %s pages)' % (rtype, size, el, cap['name'], cap['size'] // 1024, J(d, "return window.__lastPdf.pages")))
         if J(d, "return !document.getElementById('sheet').hidden"): click(d, '#sheetClose')
+    # --- v4.2 photo-only PDFs: Photo Addendum Supplement (4 per page) and full-resolution photos (1 per page)
+    nph = J(d, "return window.__pa.cur.areas.reduce((s,r)=>s+r.movein.photos.length+r.moveout.photos.length+r.afterrepairs.photos.length,0)")
+    for kind in ['supplement', 'photos']:
+        click(d, '#pdfBtn')
+        check(wait(d, "!document.getElementById('sheet').hidden && document.getElementById('pdfGo')", 5), 'PDF sheet opens (%s)' % kind)
+        click(d, 'input[name=rtype][value=moveout]'); click(d, 'input[name=pkind][value=%s]' % kind)
+        if kind == 'photos': check(J(d, "return document.getElementById('pdfSizeBox').hidden"), 'photo size choice hidden for full-resolution photos')
+        t0 = time.time(); click(d, '#pdfGo')
+        wait(d, "document.getElementById('pdfShare')", 120, 'pdf build %s' % kind)
+        el = time.time() - t0
+        shot(d, '11b_pdf_%s' % kind)
+        click(d, '#pdfShare'); time.sleep(0.4)
+        cap = read_capture(d)
+        fn = os.path.join(OUT, 'photos_%s.pdf' % kind)
+        open(fn, 'wb').write(base64.b64decode(cap['b64']))
+        pdfs[kind] = fn
+        pages = J(d, "return window.__lastPdf.pages")
+        want = nph if kind == 'photos' else -(-nph // 4)
+        check(cap['type'] == 'application/pdf' and pages == want, '%s PDF built in %.1fs: %s (%d KB, %s pages for %d photos)' % (kind, el, cap['name'], cap['size'] // 1024, pages, nph))
+        if J(d, "return !document.getElementById('sheet').hidden"): click(d, '#sheetClose')
+    check(os.path.getsize(pdfs['photos']) > os.path.getsize(pdfs[('moveout', 'email')]), 'full-resolution photos PDF is larger than the email report')
     e_sz = os.path.getsize(pdfs[('moveout', 'email')]); f_sz = os.path.getsize(pdfs[('moveout', 'full')])
     check(e_sz < f_sz, 'email-friendly PDF is smaller than full resolution (%d KB vs %d KB)' % (e_sz // 1024, f_sz // 1024))
 

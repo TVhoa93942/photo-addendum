@@ -343,7 +343,7 @@ body.noscroll .toast.show{transform:none}
 <section id="libView" class="view" hidden>
   <header class="app">
     <div class="hrow">
-      <div class="htxt"><h1>Photo Addendum</h1><div class="sub">Phillips Real Estate · Bill &amp; Red Property Management</div></div>
+      <div class="htxt"><h1>Photo Addendum</h1><div class="sub">Phillips Real Estate</div></div>
       <button class="hbtn" id="libMenuBtn" aria-label="Menu">⋯</button>
     </div>
   </header>
@@ -888,7 +888,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 (function(){
 'use strict';
 /* =====================================================================
-   PHOTO ADDENDUM v4 — Phillips Real Estate / Bill & Red Property Management
+   PHOTO ADDENDUM v4 — Phillips Real Estate
    Storage: IndexedDB "photo_addendum_v4"
      inspections (keyPath id) — small JSON per inspection (no image bytes)
      full  (photoId -> ArrayBuffer JPEG, ~1600px, stamped)
@@ -898,7 +898,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
    IndexedDB in some modes. The v3 database is read for migration only and
    is never modified.
    ===================================================================== */
-const APP_VERSION='4.1';
+const APP_VERSION='4.2';
 const DB_NAME='photo_addendum_v4';
 const V3_DB='phillips_photo_addendum_db', V3_STORE='project', V3_KEY='current', V3_LS='phillips_photo_addendum_v1';
 const STAGES=['movein','moveout','afterrepairs'];
@@ -2165,7 +2165,6 @@ async function buildPDF(insp,type,size,onProg){
 
   // ---- first page header ----
   setF('bold',18,C.NAVY); doc.text('PHILLIPS REAL ESTATE',M,50);
-  setF('bold',8.5,C.NAVY); doc.text('BILL & RED PROPERTY MANAGEMENT',PW-M,50,{align:'right'});
   draw(C.NAVY); doc.setLineWidth(1.4); doc.line(M,57,PW-M,57);
   setF('normal',8,C.MUT); doc.text(T(BRAND_LINE),M,69);
   setF('bold',15,C.NAVY); doc.text(type==='movein'?'PHOTO ADDENDUM — Move-In Condition Report':'PHOTO ADDENDUM — Move-In / Move-Out Condition Report',M,93);
@@ -2334,7 +2333,7 @@ async function buildPDF(insp,type,size,onProg){
   const N=doc.internal.getNumberOfPages();
   for(let i=1;i<=N;i++){
     doc.setPage(i); draw(C.LINE); doc.setLineWidth(.6); doc.line(M,PH-38,PW-M,PH-38);
-    setF('normal',7.5,C.MUT); doc.text(fit('Phillips Real Estate · Bill & Red Property Management · Photo Addendum'+(place?' — '+place:''),CW-70),M,PH-28);
+    setF('normal',7.5,C.MUT); doc.text(fit('Phillips Real Estate · Photo Addendum'+(place?' — '+place:''),CW-70),M,PH-28);
     doc.text('Page '+i+' of '+N,PW-M,PH-28,{align:'right'});
     setF('normal',6.5,C.MUT); doc.text(T(LEGAL_LINE),M,PH-18);
   }
@@ -2342,23 +2341,118 @@ async function buildPDF(insp,type,size,onProg){
   const blob=doc.output('blob');
   return {blob:blob,name:name,pages:N};
 }
+/* ===================== PHOTO-ONLY PDFs (v4.2) =====================
+   layout 'single' — Full-resolution photos: one photo per page at original resolution, page turned to match the photo.
+   layout 'grid4'  — Photo Addendum Supplement: every photo, four to a page, labeled with room / stage / date.
+   Both include exactly the photos the chosen report covers (Move-In report → move-in photos; Move-Out → all stages). */
+async function buildPhotosPDF(insp,type,layout,size,onProg){
+  if(!window.jspdf||!window.jspdf.jsPDF) throw new Error('The PDF engine is missing from this copy of the app. Reopen the app while online to update it.');
+  const jsPDF=window.jspdf.jsPDF;
+  const used=type==='movein'?['movein']:STAGES;
+  const list=[]; insp.areas.forEach(r=>used.forEach(st=>{ const ph=r[st].photos; ph.forEach((p,i)=>list.push({r:r,st:st,p:p,i:i,n:ph.length})); }));
+  if(!list.length) throw new Error(type==='movein'?'There are no move-in photos yet.':'There are no photos in this inspection yet.');
+  const single=layout==='single';
+  const T=pdfSafe, d=insp.details, place=[d.address,unitText(d.unit)].filter(Boolean).join(', ');
+  const C={NAVY:[29,58,95],INK:[30,40,52],MUT:[105,116,128],LINE:[212,219,227],BOX:[234,238,243],GREEN:[43,122,75],RED:[163,58,58],AMBER:[147,101,26],WHITE:[255,255,255]};
+  const stCol=st=>st==='movein'?C.GREEN:st==='moveout'?C.RED:C.AMBER;
+  const land=p=>(p.w||4)>=(p.h||3);
+  const doc=new jsPDF({unit:'pt',format:'letter',orientation:(single&&land(list[0].p))?'l':'p',compress:true});
+  const M=36;
+  const setF=(st,sz,col)=>{ doc.setFont('helvetica',st); doc.setFontSize(sz); doc.setTextColor(col[0],col[1],col[2]); };
+  const fill=c=>doc.setFillColor(c[0],c[1],c[2]); const draw=c=>doc.setDrawColor(c[0],c[1],c[2]);
+  const fit=(s,w)=>{ s=T(s); if(doc.getTextWidth(s)<=w) return s; while(s.length>1&&doc.getTextWidth(s+'…')>w) s=s.slice(0,-1); return s+'…'; };
+  const opacity=o=>{ try{ doc.setGState(new doc.GState({opacity:o})); }catch(e){} };
+  const dims=()=>({PW:doc.internal.pageSize.getWidth(),PH:doc.internal.pageSize.getHeight()});
+  const pageNo=()=>doc.internal.getCurrentPageInfo().pageNumber;
+  const bookmark=t=>{ try{ doc.outline.add(null,T(t),{pageNumber:pageNo()}); }catch(e){} };
+  const title=single?'Photo Addendum — Full-Resolution Photos':'PHOTO ADDENDUM SUPPLEMENT';
+  const label=it=>roomTitle(it.r)+' — '+STAGE_NAME[it.st]+(it.n>1?' · photo '+(it.i+1)+' of '+it.n:'');
+  const head=()=>{ const {PW}=dims();
+    setF('bold',13,C.NAVY); doc.text('PHILLIPS REAL ESTATE',M,34);
+    setF('bold',9,C.NAVY); doc.text(T(title),PW-M,34,{align:'right'});
+    draw(C.NAVY); doc.setLineWidth(1.2); doc.line(M,40,PW-M,40);
+    setF('normal',7.5,C.MUT); doc.text(fit([place,d.tenant?'Tenant: '+d.tenant:'',type==='movein'?'Move-In':'Move-In / Move-Out'].filter(Boolean).join('  ·  '),PW-2*M),M,51);
+  };
+  const loadImg=async p=>{
+    let ab=null; try{ ab=await dbGet('full',p.id); }catch(e){ logErr('photoPdfGet',e); }
+    if(!ab) return null;
+    let data=new Uint8Array(ab), w=p.w, h=p.h;
+    if(!single&&size==='email'&&Math.max(w||0,h||0)>1000){ try{ const s=await shrinkJPEG(ab,1000,0.75); data=new Uint8Array(s.ab); w=s.w; h=s.h; }catch(e){ logErr('photoPdfShrink',e); } }
+    return {data:data,w:w||4,h:h||3};
+  };
+  const putImg=(im,p,x,y,w,h)=>{
+    draw(C.LINE); fill(C.BOX); doc.setLineWidth(.6); doc.rect(x,y,w,h,'FD');
+    if(!im){ setF('italic',9,C.MUT); doc.text('Photo unavailable',x+w/2,y+h/2+3,{align:'center'}); return; }
+    const ar=im.w/im.h; let dw=w,dh=dw/ar; if(dh>h){ dh=h; dw=dh*ar; }
+    const ix=x+(w-dw)/2, iy=y+(h-dh)/2;
+    try{ doc.addImage(im.data,'JPEG',ix,iy,dw,dh,(single?'f':'g')+p.id,'NONE'); }catch(e){ logErr('photoPdfAdd',e); }
+    if(!p.stamped){ const st=fmtStamp(p.ts); const fs=single?9:7; setF('normal',fs,C.WHITE); const sw=doc.getTextWidth(st)+8, sh=fs+5;
+      opacity(.6); fill([0,0,0]); doc.rect(ix+dw-sw,iy+dh-sh,sw,sh,'F'); opacity(1); doc.text(st,ix+dw-4,iy+dh-4); }
+  };
+  let lastRoom=null;
+  if(single){
+    for(let k=0;k<list.length;k++){
+      const it=list[k], p=it.p;
+      if(onProg) onProg(k,list.length,'Adding photo '+(k+1)+' of '+list.length);
+      if(k>0) doc.addPage('letter',land(p)?'l':'p');
+      const {PW,PH}=dims(); head();
+      if(it.r!==lastRoom){ bookmark(roomTitle(it.r)); lastRoom=it.r; }
+      setF('bold',10,stCol(it.st)); doc.text(fit(label(it),PW-2*M-130),M,66);
+      setF('normal',8,C.MUT); doc.text(T(fmtStamp(p.ts)),PW-M,66,{align:'right'});
+      const capH=p.cap?14:0, top=72, bot=PH-44-capH;
+      putImg(await loadImg(p),p,M,top,PW-2*M,bot-top);
+      if(p.cap){ setF('italic',8.5,C.INK); doc.text(fit(p.cap,PW-2*M),M,bot+10); }
+      if(k%4===3) await sleep(0);
+    }
+  } else {
+    const {PW,PH}=dims(), CW=PW-2*M, g=14, gw=(CW-g)/2, top=62, bot=PH-46, rowH=(bot-top-g)/2;
+    for(let k=0;k<list.length;k++){
+      const it=list[k], p=it.p, slot=k%4;
+      if(onProg) onProg(k,list.length,'Adding photo '+(k+1)+' of '+list.length);
+      if(slot===0){ if(k>0) doc.addPage('letter','p'); head(); }
+      if(it.r!==lastRoom){ bookmark(roomTitle(it.r)); lastRoom=it.r; }
+      const x=M+(slot%2)*(gw+g), y=top+Math.floor(slot/2)*(rowH+g);
+      setF('bold',8.5,stCol(it.st)); doc.text(fit(label(it),gw),x,y+8);
+      const ih=rowH-14-12;
+      putImg(await loadImg(p),p,x,y+13,gw,ih);
+      if(p.cap){ setF('italic',7.5,C.INK); doc.text(fit(p.cap,gw),x,y+13+ih+10); }
+      if(k%8===7) await sleep(0);
+    }
+  }
+  if(onProg) onProg(list.length,list.length,'Finishing…');
+  await nextFrame();
+  const N=doc.internal.getNumberOfPages();
+  for(let i=1;i<=N;i++){
+    doc.setPage(i); const {PW,PH}=dims();
+    draw(C.LINE); doc.setLineWidth(.6); doc.line(M,PH-34,PW-M,PH-34);
+    setF('normal',7.5,C.MUT); doc.text(fit('Phillips Real Estate · '+(single?'Photo Addendum — Full-Resolution Photos':'Photo Addendum Supplement')+(place?' — '+place:''),PW-2*M-70),M,PH-24);
+    doc.text('Page '+i+' of '+N,PW-M,PH-24,{align:'right'});
+    setF('normal',6.5,C.MUT); doc.text(T(LEGAL_LINE),M,PH-14);
+  }
+  const name=(slug(d.address)||'Inspection')+(d.unit?'_'+slug(unitText(d.unit)):'')+'_'+(type==='movein'?'MoveIn':'MoveOut')+(single?'_Photos_FullRes_':'_PhotoAddendumSupplement_')+todayYMD()+'.pdf';
+  return {blob:doc.output('blob'),name:name,pages:N,photos:list.length};
+}
 function openPdfSheet(){
   if(!cur) return;
   if(!cur.areas.length){ toast('Add rooms and photos first.'); return; }
   flushSave();
   const hasOut=countStage(cur,'moveout')>0||countStage(cur,'afterrepairs')>0;
-  let type=hasOut?'moveout':'movein', size='email';
+  let type=hasOut?'moveout':'movein', size='email', kind='report';
   const radio=(name,val,cur0,title,sub)=>'<label class="radio'+(val===cur0?' sel':'')+'"><input type="radio" name="'+name+'" value="'+val+'"'+(val===cur0?' checked':'')+'><span><b>'+title+'</b><span>'+sub+'</span></span></label>';
   openSheet('PDF Report',
     '<div class="opt-h" style="margin-top:4px">Report</div>'+
     radio('rtype','movein',type,'Move-In Report','Move-in photos and notes — for the lease package')+
     radio('rtype','moveout',type,'Move-Out Report','Move-in vs. move-out side by side, after-repair photos and the deduction worksheet')+
-    '<div class="opt-h">Photo size</div>'+
+    '<div class="opt-h">Create</div>'+
+    radio('pkind','report',kind,'📄 PDF Report','The condition report — summary, rooms, notes, worksheet and signatures')+
+    radio('pkind','supplement',kind,'🗂 Photo Addendum Supplement','Every photo in the report, 4 to a page, labeled by room, stage and date')+
+    radio('pkind','photos',kind,'🖼 Full-resolution photos','Just the photos in the report, one per page at full resolution — large file')+
+    '<div id="pdfSizeBox"><div class="opt-h">Photo size</div>'+
     radio('psize','email',size,'Email-friendly','Smaller file that emails easily — sharp enough to print')+
-    radio('psize','full',size,'Full resolution','Largest file — every photo at full detail')+
+    radio('psize','full',size,'Full resolution','Largest file — every photo at full detail')+'</div>'+
     '<button class="primary wide" style="margin-top:14px" id="pdfGo">Create PDF</button><div id="pdfOut"></div>',
     body=>{
-      body.addEventListener('change',e=>{ if(e.target.name==='rtype') type=e.target.value; if(e.target.name==='psize') size=e.target.value;
+      body.addEventListener('change',e=>{ if(e.target.name==='rtype') type=e.target.value; if(e.target.name==='psize') size=e.target.value; if(e.target.name==='pkind'){ kind=e.target.value; $('pdfSizeBox').hidden=kind==='photos'; }
         Array.prototype.forEach.call(body.querySelectorAll('.radio'),l=>l.classList.toggle('sel',l.querySelector('input').checked)); });
       $('pdfGo').onclick=async()=>{
         const go=$('pdfGo'); go.disabled=true; go.textContent='Creating…'; const out=$('pdfOut');
@@ -2367,9 +2461,10 @@ function openPdfSheet(){
         try{
           await flushSave();
           const t0=Date.now();
-          const res=await buildPDF(insp,type,size,(i,n,msg)=>{ const b=$('pdfBar'); if(b) b.style.width=Math.round(i/Math.max(1,n)*100)+'%'; const m=$('pdfMsg'); if(m) m.textContent=msg; });
+          const prog=(i,n,msg)=>{ const b=$('pdfBar'); if(b) b.style.width=Math.round(i/Math.max(1,n)*100)+'%'; const m=$('pdfMsg'); if(m) m.textContent=msg; };
+          const res=kind==='report'?await buildPDF(insp,type,size,prog):await buildPhotosPDF(insp,type,kind==='photos'?'single':'grid4',size,prog);
           if(!$('pdfOut')) return;
-          window.__lastPdf={name:res.name,pages:res.pages,size:res.blob.size,ms:Date.now()-t0};
+          window.__lastPdf={kind:kind,name:res.name,pages:res.pages,size:res.blob.size,ms:Date.now()-t0};
           const tip=(!isBackedUp(insp)&&allPhotos(insp).length)?'<button class="secondary wide" style="margin-top:8px" id="pdfBk">💾 Also back up this inspection</button>':'';
           out.innerHTML='<div class="result"><b>✓ PDF ready · '+res.pages+' page'+(res.pages>1?'s':'')+' · '+fmtMB(res.blob.size)+'</b><p>Tap below, then choose <b>Mail</b> to email it, <b>Print</b>, or <b>Save to Files</b>.</p><button class="primary wide" id="pdfShare">📤 Share / Save PDF</button>'+tip+'</div>';
           go.textContent='Create again'; go.disabled=false;
@@ -2426,11 +2521,11 @@ function openHelp(){
     '<h3>Move-out</h3><ul><li>Under each room, the move-in photos appear so you can shoot the same angles.</li><li>Mark each room <b>Normal wear</b>, <b>Cleaning</b> or <b>Damage</b> and enter an estimated charge — the Deposit Worksheet totals it.</li><li>Use <b>After Repairs</b> for photos of completed repairs or cleaning you deduct for.</li></ul>'+
     '<h3>Photos</h3><p>Tap a photo to view it full screen: double-tap to zoom, swipe to move between photos, add a caption, make it the <b>main photo</b> (prints large), or delete it — with Undo.</p>'+
     '<h3>Your Photos app</h3><ul><li>Tap <b>📸 Save … to the Photos app</b> (under the rooms, or ⋯ → Save photos to Photos app), then <b>Save Images</b> on the share sheet. Each photo is dated when it was taken and labeled with the room and address. They land in Recents.</li><li>After Quick Shoot and when you leave an inspection, the app offers to save the new photos. Turn that off in Settings.</li><li>In the photo viewer, <b>📸 Save to Photos</b> saves just that photo — or press and hold the photo.</li><li>Want every shot in Photos with no extra tap? Take pictures with the regular Camera app and add them with <b>🖼 Library</b> — they keep their date.</li></ul>'+
-    '<h3>Report</h3><p><b>📄 PDF Report</b> → Move-In Report (lease package) or Move-Out Report (side by side + worksheet). Then <b>Share / Save PDF</b> → Mail, Print or Save to Files.</p></div>');
+    '<h3>Report</h3><p><b>📄 PDF Report</b> → Move-In Report (lease package) or Move-Out Report (side by side + worksheet). Under <b>Create</b>, choose the report itself, the <b>Photo Addendum Supplement</b> (every photo, 4 to a page) or <b>Full-resolution photos</b> (one per page). Then <b>Share / Save PDF</b> → Mail, Print or Save to Files.</p></div>');
 }
 function openWhatsNew(force){
   openSheet('What’s new','<div class="help">'+(migratedNote?'<div class="banner info" style="margin-top:4px">✓ '+esc(migratedNote)+'</div>':'')+
-    '<h3 style="margin-top:4px">Version 4.1</h3><ul><li><b>📸 Save photos to your Photos app</b> — one tap on <b>Save Images</b>. Each photo is dated when it was taken and labeled with the room and address.</li><li>The app offers this after Quick Shoot and when you leave an inspection (Settings can turn the offer off). In the photo viewer, <b>📸 Save to Photos</b> saves a single photo.</li></ul>'+
+    '<h3 style="margin-top:4px">Version 4.2</h3><ul><li>Two new PDFs under <b>📄 PDF Report → Create</b>: the <b>Photo Addendum Supplement</b> (every photo in the report, 4 to a page) and <b>Full-resolution photos</b> (one photo per page at full detail).</li><li>Branding now reads <b>Phillips Real Estate</b>.</li></ul><h3>Version 4.1</h3><ul><li><b>📸 Save photos to your Photos app</b> — one tap on <b>Save Images</b>. Each photo is dated when it was taken and labeled with the room and address.</li><li>The app offers this after Quick Shoot and when you leave an inspection (Settings can turn the offer off). In the photo viewer, <b>📸 Save to Photos</b> saves a single photo.</li></ul>'+
     '<h3>Version 4</h3><ul><li><b>Every inspection is kept</b> on this '+DEV+' — reopen any property months later for move-out. No more exporting a file to carry it forward.</li>'+
     '<li><b>Saves instantly</b> after every photo and keystroke — ✓ Saved shows at the top.</li>'+
     '<li><b>Works with no cell signal</b> once it has opened online.</li>'+
@@ -2601,7 +2696,7 @@ async function boot(){
 }
 // test hooks
 window.__pa={get cur(){ return cur; },get lib(){ return lib; },get settings(){ return settings; },get openRid(){ return openRid; },errLog:errLog,version:APP_VERSION,
-  dbGet:dbGet,dbGetAll:dbGetAll,flushSave:flushSave,buildPDF:buildPDF,buildBackupBlob:buildBackupBlob,importFile:importFile,exifDateFromAB:exifDateFromAB,
+  dbGet:dbGet,dbGetAll:dbGetAll,flushSave:flushSave,buildPDF:buildPDF,buildPhotosPDF:buildPhotosPDF,buildBackupBlob:buildBackupBlob,importFile:importFile,exifDateFromAB:exifDateFromAB,
   openInspection:openInspection,showLibrary:showLibrary,deliverHook:null,shareHook:null,withExif:withExif,
   get albumBatch(){ return ALBUM_BATCH; },set albumBatch(v){ ALBUM_BATCH=v; },ready:false};
 boot().then(()=>{ window.__pa.ready=true; },e=>{ logErr('boot',e); $('splashMsg').innerHTML='<div class="err"><b>Something went wrong starting the app.</b><br>'+esc(e&&e.message||e)+'<br><br><button class="primary wide" onclick="location.reload()">Try again</button></div>'; });

@@ -1,7 +1,7 @@
 # Photo Addendum
 
-Move-in / move-out condition photos and PDF reports for **Phillips Real Estate** and
-**Bill & Red Property Management**. A web app installed to the iPhone/iPad Home Screen.
+Move-in / move-out condition photos and PDF reports for **Phillips Real Estate**.
+A web app installed to the iPhone/iPad Home Screen.
 
 **Live app:** https://tvhoa93942.github.io/photo-addendum/
 Install: open the link in Safari → Share → **Add to Home Screen**. Previous version (v3) stays at `/v3/`.

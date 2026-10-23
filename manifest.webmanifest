@@ -1,7 +1,7 @@
 {
   "name": "Photo Addendum — Phillips Real Estate",
   "short_name": "Photo Addendum",
-  "description": "Move-in / move-out condition photos and reports for Phillips Real Estate and Bill & Red Property Management.",
+  "description": "Move-in / move-out condition photos and reports for Phillips Real Estate.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
