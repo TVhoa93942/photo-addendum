@@ -898,7 +898,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
    IndexedDB in some modes. The v3 database is read for migration only and
    is never modified.
    ===================================================================== */
-const APP_VERSION='4.2';
+const APP_VERSION='4.3';
 const DB_NAME='photo_addendum_v4';
 const V3_DB='phillips_photo_addendum_db', V3_STORE='project', V3_KEY='current', V3_LS='phillips_photo_addendum_v1';
 const STAGES=['movein','moveout','afterrepairs'];
@@ -2180,24 +2180,33 @@ async function buildPDF(insp,type,size,onProg){
 
   // ---- summary table ----
   setF('bold',11.5,C.NAVY); doc.text('Inspection Summary',M,y+9); y+=16;
-  const cols=type==='movein'?[['Room / Area',196],['Condition',78],['Photos',52],['Comments',CW-326]]:[['Room / Area',170],['Move-In',96],['Move-Out',96],['Result',90],['Charge',CW-452]];
-  const rh=15;
-  const head=()=>{ fill(C.NAVY); doc.rect(M,y,CW,rh,'F'); setF('bold',8,C.WHITE); let x=M+6; cols.forEach(c=>{ doc.text(c[0],x,y+10.5); x+=c[1]; }); y+=rh; };
-  const cell=sd=>{ const n=sd.photos.length; return (n?photoCountText(n):'—')+(sd.cond?' · '+condLabel(sd.cond):''); };
+  const cols=type==='movein'?[['Room / Area',CW-210],['Condition',100],['Photos',60],['Page',50]]:[['Room / Area',180],['Condition (In \u00BB Out)',115],['Photos (In/Out)',72],['Result',78],['Charge',60],['Page',35]];
+  const head=()=>{ fill(C.NAVY); doc.rect(M,y,CW,15,'F'); setF('bold',8,C.WHITE); let x=M+6; cols.forEach((c,ci)=>{ if(ci===cols.length-1) doc.text(c[0],M+CW-6,y+10.5,{align:'right'}); else doc.text(c[0],x,y+10.5); x+=c[1]; }); y+=15; };
+  const cin=sd=>condLabel(sd.cond)||'\u2014';
+  const sumRows=[];
   head();
-  if(!rooms.length){ setF('italic',8.5,C.MUT); doc.text('No rooms with photos or notes yet.',M+6,y+11); y+=rh; }
+  if(!rooms.length){ setF('italic',8.5,C.MUT); doc.text('No rooms with photos or notes yet.',M+6,y+11); y+=15; }
   rooms.forEach((r,i)=>{
+    setF('bold',8,C.INK); let nm=doc.splitTextToSize(T(roomTitle(r)),cols[0][1]-8); if(nm.length>2) nm=[nm[0],fit(nm.slice(1).join(' '),cols[0][1]-8)];
+    const rh=nm.length>1?25:15;
     if(y+rh>BOT){ newPage(); head(); }
     if(i%2===0){ fill(C.SOFT); doc.rect(M,y,CW,rh,'F'); }
-    const vals=type==='movein'?[roomTitle(r),condLabel(r.movein.cond)||'—',String(r.movein.photos.length),(r.movein.note||'').replace(/\s+/g,' ')]:
-      [roomTitle(r),cell(r.movein),cell(r.moveout),tagLabel(r.tag)||'—',hasCharge(r)?fmtMoney(parseMoney(r.charge)):''];
-    let x=M+6; vals.forEach((v,ci)=>{ const col=(type!=='movein'&&ci===3&&r.tag)?(r.tag==='damage'?C.RED:r.tag==='cleaning'?C.AMBER:C.GREEN):C.INK; setF(ci===0||(type!=='movein'&&ci===3&&r.tag)?'bold':'normal',8,col); doc.text(fit(v,cols[ci][1]-8),x,y+10.5); x+=cols[ci][1]; });
+    const ar=r.afterrepairs.photos.length;
+    const vals=type==='movein'?[null,cin(r.movein),String(r.movein.photos.length)]:
+      [null,cin(r.movein)+'  \u00BB  '+cin(r.moveout),r.movein.photos.length+' / '+r.moveout.photos.length+(ar?' (+'+ar+')':''),tagLabel(r.tag)||'\u2014',hasCharge(r)?fmtMoney(parseMoney(r.charge)):''];
+    let x=M+6;
+    setF('bold',8,C.INK); nm.forEach((l,j)=>doc.text(l,x,y+10.5+j*10)); x+=cols[0][1];
+    for(let ci=1;ci<vals.length;ci++){ const v=vals[ci]; const isRes=type!=='movein'&&ci===3&&r.tag;
+      const col=isRes?(r.tag==='damage'?C.RED:r.tag==='cleaning'?C.AMBER:C.GREEN):C.INK;
+      setF(isRes?'bold':'normal',8,col); doc.text(fit(v,cols[ci][1]-8),x,y+10.5); x+=cols[ci][1]; }
+    sumRows.push({r:r,page:pageNo(),y:y,h:rh});
     y+=rh;
   });
   draw(C.LINE); doc.setLineWidth(.6); doc.line(M,y,M+CW,y);
   if(type!=='movein'){ const tot=sumCharges(insp); if(tot>0){ setF('bold',8.5,C.NAVY); doc.text('Total estimated charges',M+6,y+12); doc.text(fmtMoney(tot),M+CW-6,y+12,{align:'right'}); y+=18; } }
   y+=16;
 
+  const roomPage=new Map();
   // ---- helpers for room pages ----
   const titleBar=(r,cont)=>{
     fill(C.NAVY); doc.roundedRect(M,y,CW,20,3,3,'F');
@@ -2229,7 +2238,7 @@ async function buildPDF(insp,type,size,onProg){
     const mi=r.movein.photos, mo=r.moveout.photos;
     const capH=((mi[0]&&mi[0].cap)||(mo[0]&&mo[0].cap))?10:0;
     ensure(26+11+mainH+capH+30);
-    bookmark(roomTitle(r)); titleBar(r,false);
+    bookmark(roomTitle(r)); roomPage.set(r,pageNo()); titleBar(r,false);
     const labels=()=>{ setF('bold',8,C.GREEN); doc.text('MOVE-IN'+(mi.length?' · '+photoCountText(mi.length):''),x1,y+7); setF('bold',8,C.RED); doc.text('MOVE-OUT'+(mo.length?' · '+photoCountText(mo.length):''),x2,y+7); y+=11; };
     labels();
     photoCell(mi[0],x1,y,cw,mainH,'No move-in photo');
@@ -2265,7 +2274,7 @@ async function buildPDF(insp,type,size,onProg){
     const ph=r.movein.photos, g=10, gw=(CW-2*g)/3, gh=Math.round(gw*0.75);
     const c0=ph.slice(0,3).some(p=>p.cap);
     ensure(26+(ph.length?gh+(c0?9:0)+6:14)+LH*2);
-    bookmark(roomTitle(r)); titleBar(r,false);
+    bookmark(roomTitle(r)); roomPage.set(r,pageNo()); titleBar(r,false);
     if(!ph.length){ setF('italic',8.5,C.MUT); doc.text('No photos',M,y+8); y+=14; }
     for(let k=0;k<ph.length;k+=3){ const rowp=ph.slice(k,k+3); const hc=rowp.some(p=>p.cap); const rh2=gh+(hc?9:0)+6;
       if(y+rh2>BOT){ newPage(); titleBar(r,true); }
@@ -2329,6 +2338,10 @@ async function buildPDF(insp,type,size,onProg){
     if(col===1) y+=bh;
   }
 
+  // ---- summary page numbers (known only after the rooms are laid out) — tap to jump ----
+  sumRows.forEach(sr=>{ const pg=roomPage.get(sr.r); if(!pg) return; doc.setPage(sr.page);
+    setF('bold',8,C.NAVY); doc.text(String(pg),M+CW-6,sr.y+10.5,{align:'right'});
+    try{ doc.link(M,sr.y,CW,sr.h,{pageNumber:pg}); }catch(e){} });
   // ---- footer on every page ----
   const N=doc.internal.getNumberOfPages();
   for(let i=1;i<=N;i++){
@@ -2525,7 +2538,7 @@ function openHelp(){
 }
 function openWhatsNew(force){
   openSheet('What’s new','<div class="help">'+(migratedNote?'<div class="banner info" style="margin-top:4px">✓ '+esc(migratedNote)+'</div>':'')+
-    '<h3 style="margin-top:4px">Version 4.2</h3><ul><li>Two new PDFs under <b>📄 PDF Report → Create</b>: the <b>Photo Addendum Supplement</b> (every photo in the report, 4 to a page) and <b>Full-resolution photos</b> (one photo per page at full detail).</li><li>Branding now reads <b>Phillips Real Estate</b>.</li></ul><h3>Version 4.1</h3><ul><li><b>📸 Save photos to your Photos app</b> — one tap on <b>Save Images</b>. Each photo is dated when it was taken and labeled with the room and address.</li><li>The app offers this after Quick Shoot and when you leave an inspection (Settings can turn the offer off). In the photo viewer, <b>📸 Save to Photos</b> saves a single photo.</li></ul>'+
+    '<h3 style="margin-top:4px">Version 4.3</h3><ul><li>Cleaner <b>Inspection Summary</b> on page 1: condition, photo counts and the page each room is on (tap to jump there). Move-Out shows the change at a glance, e.g. <b>Good » Fair</b>. Long room names wrap instead of being cut off. Full comments stay with each room’s photos.</li></ul><h3>Version 4.2</h3><ul><li>Two new PDFs under <b>📄 PDF Report → Create</b>: the <b>Photo Addendum Supplement</b> (every photo in the report, 4 to a page) and <b>Full-resolution photos</b> (one photo per page at full detail).</li><li>Branding now reads <b>Phillips Real Estate</b>.</li></ul><h3>Version 4.1</h3><ul><li><b>📸 Save photos to your Photos app</b> — one tap on <b>Save Images</b>. Each photo is dated when it was taken and labeled with the room and address.</li><li>The app offers this after Quick Shoot and when you leave an inspection (Settings can turn the offer off). In the photo viewer, <b>📸 Save to Photos</b> saves a single photo.</li></ul>'+
     '<h3>Version 4</h3><ul><li><b>Every inspection is kept</b> on this '+DEV+' — reopen any property months later for move-out. No more exporting a file to carry it forward.</li>'+
     '<li><b>Saves instantly</b> after every photo and keystroke — ✓ Saved shows at the top.</li>'+
     '<li><b>Works with no cell signal</b> once it has opened online.</li>'+
